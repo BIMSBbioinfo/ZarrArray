@@ -25,15 +25,12 @@ get_h5mread_returned_type <- function(filepath, name, as.integer=FALSE)
 ### can be).
 ### Set 'noreduce' to TRUE to skip the reduction step.
 ### Set 'as.integer' to TRUE to force returning the result as an integer array.
-h5mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
+zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
                     as.vector=NA, as.integer=FALSE, as.sparse=FALSE,
                     method=0L, use.H5Dread_chunk=FALSE)
 {
-  if (!is(filepath, "H5File")) {
-    filepath <- H5File(filepath, .no_rhdf5_h5id=TRUE)
-    on.exit(close(filepath))
-  }
-  name <- normarg_h5_name(name)
+  # check name
+  # name <- normarg_h5_name(name)
   
   if (!isTRUEorFALSE(as.sparse))
     stop(wmsg("'as.sparse' must be TRUE or FALSE"))

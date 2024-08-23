@@ -75,3 +75,14 @@ setAs("ZarrMatrix", "ZarrArray", function(from) from)  # no-op
 setAs("ANY", "ZarrMatrix",
       function(from) as(as(from, "ZarrArray"), "ZarrMatrix")
 )
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### show
+###
+
+setMethod("show", 
+          "ZarrArray", 
+          definition = function(x){
+            cat(paste0(class(x), " with shape: ", paste(x@seed@dim, collapse = "x"), " \n"))
+          }
+)
