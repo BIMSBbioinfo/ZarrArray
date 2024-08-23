@@ -38,29 +38,25 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### h5exists()
+### zarrexists()
 ###
 
-h5exists <- function(filepath, name)
+zarrexists <- function(filepath, name)
 {
-  fid <- .H5Fopen(filepath, flags="H5F_ACC_RDONLY")
-  on.exit(H5Fclose(fid))
-  H5Lexists(fid, name)
+  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
+  grepl(".zarr$", filepath)
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### h5isdataset() and h5isgroup()
+### zarrisdataset() and h5isgroup()
 ###
 
-h5isdataset <- function(filepath, name)
+zarrisdataset <- function(filepath, name)
 {
-  fid <- .H5Fopen(filepath, flags="H5F_ACC_RDONLY")
-  on.exit(H5Fclose(fid))
-  did <- try(.H5Dopen(fid, name), silent=TRUE)
+  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
+  did <- try(zarr.array$get_item(name))
   ans <- !inherits(did, "try-error")
-  if (ans)
-    H5Dclose(did)
   ans
 }
 
@@ -120,16 +116,11 @@ dim_as_integer <- function(dim, filepath, name, what="HDF5 dataset")
 
 ### The TENxMatrixSeed() constructor calls h5dim() with 'as.integer=FALSE'
 ### in order to get the dimension of a monodimensional array of length >= 2^31.
-h5dim <- function(filepath, name, as.integer=TRUE)
+zarrdim <- function(filepath, name)
 {
-  did <- .get_h5dataset(filepath, name)
-  on.exit(H5Dclose(did), add=TRUE)
-  sid <- H5Dget_space(did)
-  on.exit(H5Sclose(sid), add=TRUE)
-  dim <- H5Sget_simple_extent_dims(sid)$size
-  if (as.integer)
-    dim <- dim_as_integer(dim, filepath, name)
-  dim
+  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
+  zarrmat <- zarr.array$get_item(name)
+  zarrmat$get_shape()
 }
 
 ### Return NULL or an integer vector parallel to 'h5dim(filepath, name)'.
@@ -192,8 +183,8 @@ normarg_h5_name <- function(name, what1="'name'",
 ### Used in validity methods
 ###
 
-### 'path' is expected to be the **absolute** path to a local HDF5 file.
-validate_h5_absolute_path <- function(path, what="'path'")
+### 'path' is expected to be the **absolute** path to a local zarr array.
+validate_zarr_absolute_path <- function(path, what="'path'")
 {
   if (!(isSingleString(path) && nzchar(path)))
     return(paste0(what, " must be a single non-empty string"))
@@ -201,33 +192,29 @@ validate_h5_absolute_path <- function(path, what="'path'")
   ## Check that 'path' points to an HDF5 file that is accessible.
   if (!file.exists(path))
     return(paste0(what, " (\"", path, "\") must be the path to ",
-                  "an existing HDF5 file"))
-  if (dir.exists(path))
-    return(paste0(what, " (\"", path, "\") must be the path to ",
-                  "an HDF5 file, not a directory"))
-  h5_content <- try(h5ls(path), silent=TRUE)
-  if (inherits(h5_content, "try-error"))
+                  "an existing zarr array"))
+  if (!grepl(".zarr$", path))
     return(paste0(what, " (\"", path, "\") doesn't seem to be ",
-                  "the path to a valid HDF5 file"))
+                  "the path to a valid zarr array"))
   if (path != tools::file_path_as_absolute(path))
     return(paste0(what, " (\"", path, "\") must be the absolute ",
-                  "canonical path the HDF5 file"))
+                  "canonical path the Zarr array"))
   TRUE
 }
 
-validate_h5_dataset_name <- function(path, name, what="'name'")
+validate_zarr_dataset_name <- function(path, name, what="'name'")
 {
   if (!(isSingleString(name) && nzchar(name)))
     return(paste0(what, " must be a single non-empty string"))
   
-  if (!h5exists(path, name))
+  if (!zarrexists(path, name))
     return(paste0(what, " (\"", name, "\") doesn't exist ",
                   "in HDF5 file \"", path, "\""))
-  if (!h5isdataset(path, name))
+  if (!zarrisdataset(path, name))
     return(paste0(what, " (\"", name, "\") is not a dataset ",
                   "in HDF5 file \"", path, "\""))
-  h5_dim <- try(h5dim(path, name), silent=TRUE)
-  if (inherits(h5_dim, "try-error"))
+  zarr_dim <- try(zarrdim(path, name), silent=TRUE)
+  if (inherits(zarr_dim, "try-error"))
     return(paste0(what, " (\"", name, "\") is a dataset with ",
                   "no dimensions in HDF5 file \"", path, "\""))
   TRUE

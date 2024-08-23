@@ -2,6 +2,7 @@
 ### ZarrArraySeed objects
 ### -------------------------------------------------------------------------
 
+# setClassUnion("character_OR_H5File", c("character", "H5File"))
 
 setClass("ZarrArraySeed",
          contains="Array",
@@ -13,7 +14,8 @@ setClass("ZarrArraySeed",
            ## (e.g. with setwd()). The path must also be in its canonical
            ## form so comparing paths from different objects is meaningful
            ## (required by quickResaveHDF5SummarizedExperiment()).
-           filepath="character_OR_H5File",
+           # filepath="character_OR_H5File",
+           filepath="character",
            
            ## Name of dataset in the HDF5 file.
            name="character",
@@ -46,16 +48,16 @@ setClass("ZarrArraySeed",
 ### and chunk dimensions.
 validate_ZarrArraySeed_dataset_geometry <- function(x, what="object")
 {
-  h5_dim <- h5dim(x@filepath, x@name)
-  if (!identical(h5_dim, x@dim))
-    return(paste0(what, " points to an HDF5 dataset (\"", x@name, "\") ",
-                  "in HDF5 file \"", x@filepath, "\" ",
+  zarr_dim <- zarrdim(x@filepath, x@name)
+  if (!identical(zarr_dim, x@dim))
+    return(paste0(what, " points to a Zarr dataset (\"", x@name, "\") ",
+                  "in Zarr array \"", x@filepath, "\" ",
                   "that does not have the expected dimensions"))
-  h5_chunkdim <- h5chunkdim(x@filepath, x@name, adjust=TRUE)
-  if (!identical(h5_chunkdim, x@chunkdim))
-    return(paste0(what, " points to an HDF5 dataset (\"", x@name, "\") ",
-                  "in HDF5 file \"", x@filepath, "\" ",
-                  "that does not have the expected chunk dimensions"))
+  # h5_chunkdim <- h5chunkdim(x@filepath, x@name, adjust=TRUE)
+  # if (!identical(h5_chunkdim, x@chunkdim))
+  #   return(paste0(what, " points to an HDF5 dataset (\"", x@name, "\") ",
+  #                 "in HDF5 file \"", x@filepath, "\" ",
+  #                 "that does not have the expected chunk dimensions"))
   TRUE
 }
 
@@ -64,19 +66,14 @@ validate_ZarrArraySeed_dataset_geometry <- function(x, what="object")
   ## 'filepath' and 'name' slots.
   x_filepath <- x@filepath
   x_name <- x@name
-  if (is(x_filepath, "H5File")) {
-    ## TODO: Implement the H5File case.
-    ## Note that using 'validObject(x@filepath)' won't be enough
-    ## because a closed H5File object is considered valid. We want to make
-    ## sure that the H5File object is opened and has a working file ID.
-  } else {
-    msg <- validate_h5_absolute_path(x_filepath, "'filepath' slot")
-    if (!isTRUE(msg))
-      return(msg)
-    msg <- validate_h5_dataset_name(x_filepath, x_name, "'name' slot")
-    if (!isTRUE(msg))
-      return(msg)
-  }
+  
+  # validate path and name
+  msg <- validate_zarr_absolute_path(x_filepath, "'filepath' slot")
+  if (!isTRUE(msg))
+    return(msg)
+  msg <- validate_zarr_dataset_name(x_filepath, x_name, "'name' slot")
+  if (!isTRUE(msg))
+    return(msg)
   
   ## 'as_sparse' slot.
   x_as_sparse <- x@as_sparse
@@ -106,15 +103,14 @@ validate_ZarrArraySeed_dataset_geometry <- function(x, what="object")
   
   ## Check that the dimnames stored in the file are consistent with
   ## the dimensions of the HDF5 dataset.
-  msg <- validate_lengths_of_h5dimnames(x_filepath, x_name)
-  if (!isTRUE(msg))
-    return(msg)
+  # msg <- validate_lengths_of_h5dimnames(x_filepath, x_name)
+  # if (!isTRUE(msg))
+  #   return(msg)
   
   TRUE
 }
 
 setValidity2("ZarrArraySeed", .validate_ZarrArraySeed)
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### path() getter/setter
@@ -140,7 +136,7 @@ setMethod("path", "ZarrArraySeed",
     val <- vector(type, 1L)  # fake value
   } else {
     index <- rep.int(list(1L), length(dim))
-    val <- h5mread(filepath, name, index, as.vector=TRUE)
+    val <- zarr_mread(filepath, name, index, as.vector=TRUE)
     stopifnot(length(val) == 1L)  # sanity check
   }
   val
@@ -239,7 +235,7 @@ setMethod("dimnames", "ZarrArraySeed",
 {
   if (!is.null(index))
     index <- S4Arrays:::expand_Nindex_RangeNSBS(index)
-  h5mread(filepath, name, starts=index,
+  zarr_mread(filepath, name, starts=index,
           as.vector=FALSE, as.integer=as.integer, as.sparse=as.sparse)
 }
 
@@ -248,15 +244,20 @@ setMethod("dimnames", "ZarrArraySeed",
 {
   ## Prior to ZarrArray 1.15.6 ZarrArraySeed objects didn't have
   ## the "type" slot.
-  if (!.hasSlot(x, "type"))
-    return(.h5mread2(x@filepath, x@name, index))
+  # if (!.hasSlot(x, "type"))
+    # return(.h5mread2(x@filepath, x@name, index)) 
   ## If the user requested a specific type when ZarrArraySeed object 'x'
   ## was constructed then we must return an array of that type.
-  as_int <- !is.na(x@type) && x@type == "integer"
-  ans <- .h5mread2(x@filepath, x@name, index, as.integer=as_int)
-  if (!is.na(x@type) && typeof(ans) != x@type)
-    storage.mode(ans) <- x@type
-  ans
+  # as_int <- !is.na(x@type) && x@type == "integer"
+  # ans <- .h5mread2(x@filepath, x@name, index, as.integer=as_int)
+  # if (!is.na(x@type) && typeof(ans) != x@type)
+    # storage.mode(ans) <- x@type
+  # ans
+  # print(x)
+  # array(1:10, dim = c(2,5))
+  # dims <- mat_test2@seed@dim
+  # array(1:(dims[1]*dims[2]), dim = dims)
+  x
 }
 
 setMethod("extract_array", "ZarrArraySeed", .extract_array_from_ZarrArraySeed)
@@ -316,15 +317,6 @@ setMethod("extract_sparse_array", "ZarrArraySeed",
           }
 )
 
-# setMethod("OLD_extract_sparse_array", "ZarrArraySeed",
-#           function(x, index)
-#           {
-#             coo <- .extract_sparse_array_from_ZarrArraySeed(x, index)
-#             SparseArraySeed(coo@dim, coo@nzcoo, coo@nzdata, check=FALSE)
-#           }
-# )
-
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### chunkdim() getter
 ###
@@ -366,17 +358,18 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
   # dim <- h5dim(filepath, name)
   dim <- zarr.array$get_item(name)$get_shape()
   # chunkdim <- h5chunkdim(filepath, name, adjust=TRUE)
+  # first_val <- .read_h5dataset_first_val(filepath, name, dim)
   
-  first_val <- .read_h5dataset_first_val(filepath, name, dim)
-  
-  new2("ZarrArraySeed", filepath=filepath,
+  new2("ZarrArraySeed", 
+       filepath=filepath,
        name=name,
        as_sparse=as.sparse,
        type=type,
        dim=dim,
        # chunkdim=chunkdim,
        chunkdim = dim,
-       first_val=first_val)
+       # first_val=first_val)
+       first_val = NULL)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
