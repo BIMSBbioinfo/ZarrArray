@@ -2,6 +2,7 @@
 ### ZarrArraySeed objects
 ### -------------------------------------------------------------------------
 
+# setClassUnion("character_OR_H5File", c("character", "H5File"))
 
 setClass("ZarrArraySeed",
          contains="Array",
@@ -13,7 +14,8 @@ setClass("ZarrArraySeed",
            ## (e.g. with setwd()). The path must also be in its canonical
            ## form so comparing paths from different objects is meaningful
            ## (required by quickResaveHDF5SummarizedExperiment()).
-           filepath="character_OR_H5File",
+           # filepath="character_OR_H5File",
+           filepath="character",
            
            ## Name of dataset in the HDF5 file.
            name="character",
@@ -46,16 +48,16 @@ setClass("ZarrArraySeed",
 ### and chunk dimensions.
 validate_ZarrArraySeed_dataset_geometry <- function(x, what="object")
 {
-  h5_dim <- h5dim(x@filepath, x@name)
-  if (!identical(h5_dim, x@dim))
+  zarr_dim <- zarrdim(x@filepath, x@name)
+  if (!identical(zarr_dim, x@dim))
     return(paste0(what, " points to an HDF5 dataset (\"", x@name, "\") ",
                   "in HDF5 file \"", x@filepath, "\" ",
                   "that does not have the expected dimensions"))
-  h5_chunkdim <- h5chunkdim(x@filepath, x@name, adjust=TRUE)
-  if (!identical(h5_chunkdim, x@chunkdim))
-    return(paste0(what, " points to an HDF5 dataset (\"", x@name, "\") ",
-                  "in HDF5 file \"", x@filepath, "\" ",
-                  "that does not have the expected chunk dimensions"))
+  # h5_chunkdim <- h5chunkdim(x@filepath, x@name, adjust=TRUE)
+  # if (!identical(h5_chunkdim, x@chunkdim))
+  #   return(paste0(what, " points to an HDF5 dataset (\"", x@name, "\") ",
+  #                 "in HDF5 file \"", x@filepath, "\" ",
+  #                 "that does not have the expected chunk dimensions"))
   TRUE
 }
 
@@ -70,10 +72,10 @@ validate_ZarrArraySeed_dataset_geometry <- function(x, what="object")
     ## because a closed H5File object is considered valid. We want to make
     ## sure that the H5File object is opened and has a working file ID.
   } else {
-    msg <- validate_h5_absolute_path(x_filepath, "'filepath' slot")
+    msg <- validate_zarr_absolute_path(x_filepath, "'filepath' slot")
     if (!isTRUE(msg))
       return(msg)
-    msg <- validate_h5_dataset_name(x_filepath, x_name, "'name' slot")
+    msg <- validate_zarr_dataset_name(x_filepath, x_name, "'name' slot")
     if (!isTRUE(msg))
       return(msg)
   }
@@ -106,15 +108,14 @@ validate_ZarrArraySeed_dataset_geometry <- function(x, what="object")
   
   ## Check that the dimnames stored in the file are consistent with
   ## the dimensions of the HDF5 dataset.
-  msg <- validate_lengths_of_h5dimnames(x_filepath, x_name)
-  if (!isTRUE(msg))
-    return(msg)
+  # msg <- validate_lengths_of_h5dimnames(x_filepath, x_name)
+  # if (!isTRUE(msg))
+  #   return(msg)
   
   TRUE
 }
 
 setValidity2("ZarrArraySeed", .validate_ZarrArraySeed)
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### path() getter/setter
@@ -366,17 +367,18 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
   # dim <- h5dim(filepath, name)
   dim <- zarr.array$get_item(name)$get_shape()
   # chunkdim <- h5chunkdim(filepath, name, adjust=TRUE)
+  # first_val <- .read_h5dataset_first_val(filepath, name, dim)
   
-  first_val <- .read_h5dataset_first_val(filepath, name, dim)
-  
-  new2("ZarrArraySeed", filepath=filepath,
+  new2("ZarrArraySeed", 
+       filepath=filepath,
        name=name,
        as_sparse=as.sparse,
        type=type,
        dim=dim,
        # chunkdim=chunkdim,
        chunkdim = dim,
-       first_val=first_val)
+       # first_val=first_val)
+       first_val = NULL)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
