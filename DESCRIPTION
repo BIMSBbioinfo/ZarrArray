@@ -7,10 +7,9 @@ Date: 2024-08-23
 License: MIT
 Author: Who wrote it
 Maintainer: Artür Manukyan <artur-man@hotmail.com>
-Depends: R (>= 3.4), methods, SparseArray, DelayedArray, rhdf5
-Imports: utils, stats, tools, Matrix,
-	rhdf5filters, BiocGenerics (>= 0.31.5), S4Vectors, IRanges,
-	S4Arrays (>= 1.1.1)
-LinkingTo: S4Vectors (>= 0.27.13), Rhdf5lib
+Depends: R (>= 3.4), methods, SparseArray, DelayedArray
+Imports: utils, stats, tools, Matrix, BiocGenerics (>= 0.31.5), 
+         S4Vectors, IRanges, S4Arrays (>= 1.1.1)
+LinkingTo: S4Vectors (>= 0.27.13)
 SystemRequirements: GNU make
 RoxygenNote: 7.3.2
