@@ -26,8 +26,7 @@ get_h5mread_returned_type <- function(filepath, name, as.integer=FALSE)
 ### Set 'noreduce' to TRUE to skip the reduction step.
 ### Set 'as.integer' to TRUE to force returning the result as an integer array.
 zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
-                    as.vector=NA, as.integer=FALSE, as.sparse=FALSE,
-                    method=0L, use.H5Dread_chunk=FALSE)
+                    as.vector=NA, as.integer=FALSE, as.sparse=FALSE)
 {
   # check name
   # name <- normarg_h5_name(name)
@@ -82,14 +81,18 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
   } else {
     stop(wmsg("'starts' must be a list (or NULL)"))
   }
-  ## C_h5mread() will return an ordinary array or vector if 'as.sparse'
-  ## is FALSE, or 'list(ans_dim, nzcoo, nzdata)' if it's TRUE.
-  ans <- .Call2("C_h5mread", filepath, name, starts, counts, noreduce,
-                as.vector, as.integer, as.sparse,
-                method, use.H5Dread_chunk,
-                PACKAGE="HDF5Array")
-  if (as.sparse)
-    ans <- COO_SparseArray(ans[[1L]], ans[[2L]], ans[[3L]], check=FALSE)
+  # ans <- .Call2("C_h5mread", filepath, name, starts, counts, noreduce,
+  #               as.vector, as.integer, as.sparse,
+  #               method, use.H5Dread_chunk,
+  #               PACKAGE="HDF5Array")
+  # read zarr
+  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
+  zarrmat <- zarr.array$get_item(name)
+  # ans <- zarrmat$get_item(list(NULL,NULL,zb_slice(0,1)))$data
+  ans <- zarrmat$get_item(list(pizzarr::slice(0,1),pizzarr::slice(0,1)))$data
+  
+  # if (as.sparse)
+  #   ans <- COO_SparseArray(ans[[1L]], ans[[2L]], ans[[3L]], check=FALSE)
   if (is.null(starts) || !order_starts)
     return(ans)
   index <- lapply(seq_along(starts0),

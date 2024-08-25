@@ -124,24 +124,13 @@ zarrdim <- function(filepath, name)
 }
 
 ### Return NULL or an integer vector parallel to 'h5dim(filepath, name)'.
-h5chunkdim <- function(filepath, name, adjust=FALSE)
+zarrchunkdim <- function(filepath, name, adjust=FALSE)
 {
-  did <- .get_h5dataset(filepath, name)
-  on.exit(H5Dclose(did), add=TRUE)
-  pid <- H5Dget_create_plist(did)
-  on.exit(H5Pclose(pid), add=TRUE)
-  if (H5Pget_layout(pid) != "H5D_CHUNKED")
-    return(NULL)
-  ## We use rev() to invert the order of the dimensions returned by
-  ## H5Pget_chunk(). It seems that H5Pget_chunk() should take care of
-  ## this though, for consistency with how rhdf5 handles the order of the
-  ## dimensions everywhere else (e.g. see ?H5Sget_simple_extent_dims).
-  chunkdim <- rev(H5Pget_chunk(pid))
-  chunkdim <- dim_as_integer(chunkdim, filepath, name,
-                             what="HDF5 dataset chunks")
+  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
+  zarrmat <- zarr.array$get_item(name)
+  chunkdim <- zarrmat$get_chunks()
   if (adjust) {
-    dim <- h5dim(filepath, name, as.integer=FALSE)
-    ## A sanity check that should never fail.
+    dim <- zarrmat$get_shape()
     stopifnot(length(chunkdim) == length(dim))
     chunkdim <- as.integer(pmin(dim, chunkdim))
   }
@@ -150,10 +139,10 @@ h5chunkdim <- function(filepath, name, adjust=FALSE)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### normarg_h5_filepath() and normarg_h5_name()
+### normarg_zarr_filepath() and normarg_zarr_name()
 ###
 
-normarg_h5_filepath <- function(path, what1="'filepath'", what2="the dataset")
+normarg_zarr_filepath <- function(path, what1="'filepath'", what2="the dataset")
 {
   if (!isSingleString(path))
     stop(wmsg(what1, " must be a single string specifying the path ",
@@ -161,7 +150,7 @@ normarg_h5_filepath <- function(path, what1="'filepath'", what2="the dataset")
   tools::file_path_as_absolute(path)  # return absolute path in canonical form
 }
 
-normarg_h5_name <- function(name, what1="'name'",
+normarg_zarr_name <- function(name, what1="'name'",
                             what2="the name of a dataset",
                             what3="")
 {
@@ -229,7 +218,7 @@ validate_zarr_dataset_name <- function(path, name, what="'name'")
 ### Return the length as a single integer (if < 2^31) or numeric (if >= 2^31).
 h5length <- function(filepath, name)
 {
-  len <- h5dim(filepath, name, as.integer=FALSE)
+  len <- zarrdim(filepath, name, as.integer=FALSE)
   stopifnot(length(len) == 1L)
   len
 }

@@ -129,7 +129,7 @@ setMethod("path", "ZarrArraySeed",
 
 ### Return a fake value (of the correct type) if the dataset is empty i.e.
 ### if at least one of its dimensions is 0.
-.read_h5dataset_first_val <- function(filepath, name, dim)
+.read_zarrdataset_first_val <- function(filepath, name, dim)
 {
   if (any(dim == 0L)) {
     type <- get_h5mread_returned_type(filepath, name)
@@ -167,9 +167,9 @@ setReplaceMethod("path", "ZarrArraySeed",
                      }
                    }
                    ## Check first val compatibility.
-                   new_first_val <- .read_h5dataset_first_val(new_filepath,
-                                                              object@name,
-                                                              object_dim)
+                   new_first_val <- .read_zarrdataset_first_val(new_filepath,
+                                                                object@name,
+                                                                object_dim)
                    if (!identical(new_first_val, object@first_val))
                      stop(wmsg("first value in HDF5 dataset '", object@name, "' ",
                                "from file '", value, "' is not as expected"))
@@ -216,7 +216,8 @@ setMethod("dim", "ZarrArraySeed", function(x) x@dim)
 
 ### Does access the file!
 setMethod("dimnames", "ZarrArraySeed",
-          function(x) h5readDimnames(x@filepath, x@name, as.character=TRUE)
+          # function(x) zarrreadDimnames(x@filepath, x@name, as.character=TRUE)
+          function(x) NULL
 )
 
 
@@ -230,38 +231,71 @@ setMethod("dimnames", "ZarrArraySeed",
 ### objects but the 'index' passed to these methods should never contain
 ### RangeNSBS objects. So it's probably ok to get rid of this and to just
 ### use h5mread() instead.
-.h5mread2 <- function(filepath, name, index=NULL,
-                      as.integer=FALSE, as.sparse=FALSE)
-{
-  if (!is.null(index))
-    index <- S4Arrays:::expand_Nindex_RangeNSBS(index)
-  zarr_mread(filepath, name, starts=index,
-          as.vector=FALSE, as.integer=as.integer, as.sparse=as.sparse)
-}
-
+# .h5mread2 <- function(filepath, name, index=NULL,
+#                       as.integer=FALSE, as.sparse=FALSE)
+# {
+#   if (!is.null(index))
+#     index <- S4Arrays:::expand_Nindex_RangeNSBS(index)
+#   zarr_mread(filepath, name, starts=index,
+#           as.vector=FALSE, as.integer=as.integer, as.sparse=as.sparse)
+# }
+# 
+# .extract_array_from_ZarrArraySeed <- function(x, index)
+# {
+#   # Prior to ZarrArray 1.15.6 ZarrArraySeed objects didn't have
+#   # the "type" slot.
+#   if (!.hasSlot(x, "type"))
+#     return(.h5mread2(x@filepath, x@name, index))
+#   # If the user requested a specific type when ZarrArraySeed object 'x'
+#   # was constructed then we must return an array of that type.
+#   ans <- .h5mread2(x@filepath, x@name, index, as.integer=as_int)
+#   if (!is.na(x@type) && typeof(ans) != x@type)
+#   storage.mode(ans) <- x@type
+#   ans
+# }
 
 .extract_array_from_ZarrArraySeed <- function(x, index)
 {
-  ## Prior to ZarrArray 1.15.6 ZarrArraySeed objects didn't have
-  ## the "type" slot.
-  # if (!.hasSlot(x, "type"))
-    # return(.h5mread2(x@filepath, x@name, index)) 
-  ## If the user requested a specific type when ZarrArraySeed object 'x'
-  ## was constructed then we must return an array of that type.
-  # as_int <- !is.na(x@type) && x@type == "integer"
-  # ans <- .h5mread2(x@filepath, x@name, index, as.integer=as_int)
-  # if (!is.na(x@type) && typeof(ans) != x@type)
-    # storage.mode(ans) <- x@type
-  # ans
-  # print(x)
-  # array(1:10, dim = c(2,5))
-  # dims <- mat_test2@seed@dim
-  # array(1:(dims[1]*dims[2]), dim = dims)
-  x
+  # check indices
+  if(!is.sequential(index)){
+    stop("You can only use sequential indices with ZarrArray")
+  }
+  as_int <- !is.na(x@type) && x@type == "integer"
+  
+  # open zarr
+  zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
+  zarrmat <- zarr.array$get_item(x@name)
+  
+  # create slices
+  slices <- mapply(function(x,y){
+    if(length(x) == 0){
+      return(pizzarr::slice(0,0))
+    } else if(is.null(x)){
+      return(pizzarr::slice(1,y))
+    } else {
+      return(pizzarr::slice(min(x),max(x)))
+    }
+  }, index, zarrmat$get_shape())
+  
+  # get zarr values given slices
+  ans <- zarrmat$get_item(slices)$data
+  ans
+}
+
+# check if indices are sequential
+is.sequential <- function(index){
+  check_list <- lapply(index, function(x){
+    if(length(x) > 0 && !is.null(x)){
+      tmp <- x[-1] - x[1:(length(x)-1)]
+      return(all(tmp == 1))
+    } else {
+      return(TRUE)
+    }
+  })
+  all(check_list)
 }
 
 setMethod("extract_array", "ZarrArraySeed", .extract_array_from_ZarrArraySeed)
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### is_sparse(), extract_sparse_array(), and OLD_extract_sparse_array()
@@ -332,8 +366,8 @@ setMethod("chunkdim", "ZarrArraySeed", function(x) x@chunkdim)
 ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
 {
   if (!is(filepath, "H5File"))
-    filepath <- normarg_h5_filepath(filepath)
-  name <- normarg_h5_name(name)
+    filepath <- normarg_zarr_filepath(filepath)
+  name <- normarg_zarr_name(name)
   
   ## Check 'as.sparse'.
   if (!isTRUEorFALSE(as.sparse))
@@ -357,8 +391,8 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
   # get attributes
   # dim <- h5dim(filepath, name)
   dim <- zarr.array$get_item(name)$get_shape()
-  # chunkdim <- h5chunkdim(filepath, name, adjust=TRUE)
-  # first_val <- .read_h5dataset_first_val(filepath, name, dim)
+  chunkdim <- zarrchunkdim(filepath, name, adjust=TRUE)
+  # first_val <- .read_zarrdataset_first_val(filepath, name, dim)
   
   new2("ZarrArraySeed", 
        filepath=filepath,
@@ -366,8 +400,7 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
        as_sparse=as.sparse,
        type=type,
        dim=dim,
-       # chunkdim=chunkdim,
-       chunkdim = dim,
+       chunkdim=chunkdim,
        # first_val=first_val)
        first_val = NULL)
 }
