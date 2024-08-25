@@ -80,9 +80,9 @@ setAs("ANY", "ZarrMatrix",
 ### show
 ###
 
-setMethod("show", 
-          "ZarrArray", 
-          definition = function(x){
-            cat(paste0(class(x), " with shape: ", paste(x@seed@dim, collapse = "x"), " \n"))
+setMethod("show",
+          "ZarrArray",
+          definition = function(object){
+            cat(paste0("<", paste(object@seed@dim, collapse = " x "), "> ", class(object), " object of type '", object@seed@type, "':\n"))
           }
 )

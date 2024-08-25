@@ -503,13 +503,11 @@ create_and_log_Zarr_dataset <- function(filepath, name, dim, maxdim=dim,
                                         type="double", H5type=NULL, size=NULL,
                                         chunkdim=dim, level=6L)
 {
-  # h5createDataset2(filepath, name, dim, maxdim=maxdim,
-  #                  type=type, H5type=H5type, size=size,
-  #                  chunkdim=chunkdim, level=level)
   zarr_array <- pizzarr::zarr_open(store = filepath, mode = "w")
   ZarrCreateDataset(filepath, zarr_array, name, dim, maxdim=maxdim,
                    type=type, H5type=H5type, size=size,
                    chunkdim=chunkdim, level=level)
-  appendDatasetCreationToZarrDumpLog(filepath, name, dim,
-                                     type, chunkdim, level)
+  # TODO: appendDatasetCreationToZarrDumpLog? ####
+  # appendDatasetCreationToZarrDumpLog(filepath, name, dim,
+  #                                    type, chunkdim, level)
 }

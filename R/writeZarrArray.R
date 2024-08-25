@@ -79,7 +79,9 @@ setMethod("is_sparse", "ZarrRealizationSink", function(x) x@as_sparse)
 ### Unlike with rZarr::h5createDataset(), if 'chunkdim' is NULL then an
 ### automatic chunk geometry will be used. To write "unchunked data" (a.k.a.
 ### contiguous data), 'chunkdim' must be set to 0.
-ZarrRealizationSink <- function(dim, dimnames=NULL, type="double",
+ZarrRealizationSink <- function(dim, 
+                                dimnames=NULL, 
+                                type="double",
                                 as.sparse=FALSE,
                                 filepath=NULL, name=NULL,
                                 H5type=NULL, size=NULL,
@@ -98,9 +100,6 @@ ZarrRealizationSink <- function(dim, dimnames=NULL, type="double",
     name <- normalize_dump_name(name)
   }
   if (is.null(chunkdim)) {
-    ## TODO: Pass 'x' instead of 'dim' to getZarrDumpChunkDim() and modify
-    ## getZarrDumpChunkDim() to return 'chunkdim(x)' if it's not NULL.
-    ## See TODO comment in dump-management.R
     chunkdim <- getZarrDumpChunkDim(dim)
   } else if (isSingleNumber(chunkdim) && chunkdim == 0) {
     chunkdim <- NULL  # no chunking
@@ -119,16 +118,18 @@ ZarrRealizationSink <- function(dim, dimnames=NULL, type="double",
   create_and_log_Zarr_dataset(filepath, name, dim,
                               type=type, H5type=H5type, size=size,
                               chunkdim=chunkdim, level=level)
-  # if (is.null(dimnames)) {
-  #   dimnames <- vector("list", length(dim))
-  # } else {
-  #   h5writeDimnames(dimnames, filepath, name)
-  # }
+  if (is.null(dimnames)) {
+    dimnames <- vector("list", length(dim))
+  } else {
+    h5writeDimnames(dimnames, filepath, name)
+  }
   new2("ZarrRealizationSink", 
        dim=dim, 
-       dimnames=dimnames, type=type,
+       dimnames=dimnames, 
+       type=type,
        as_sparse=as.sparse,
-       filepath=filepath, name=name,
+       filepath=filepath, 
+       name=name,
        chunkdim=chunkdim)
 }
 
