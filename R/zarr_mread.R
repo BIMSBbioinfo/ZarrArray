@@ -1,21 +1,15 @@
 ### =========================================================================
-### h5mread()
+### zarr_mread()
 ### -------------------------------------------------------------------------
 ###
-### An alternative to rhdf5::h5read() -- STILL EXPERIMENTAL!
-###
 
-### The R type returned by h5mread() is determined by arguments 'filepath',
+### The R type returned by zarr_mread() is determined by arguments 'filepath',
 ### 'name', and 'as.integer'.
-get_h5mread_returned_type <- function(filepath, name, as.integer=FALSE)
+get_zarrmread_returned_type <- function(filepath, name, as.integer=FALSE)
 {
-  if (!is(filepath, "H5File")) {
-    filepath <- H5File(filepath, .no_rhdf5_h5id=TRUE)
-    on.exit(close(filepath))
-  }
-  name <- normarg_h5_name(name)
+  name <- normarg_zarr_name(name)
   
-  .Call2("C_get_h5mread_returned_type", filepath, name, as.integer,
+  .Call2("C_get_zarrmread_returned_type", filepath, name, as.integer,
          PACKAGE="HDF5Array")
 }
 
@@ -29,7 +23,7 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
                     as.vector=NA, as.integer=FALSE, as.sparse=FALSE)
 {
   # check name
-  # name <- normarg_h5_name(name)
+  # name <- normarg_zarr_name(name)
   
   if (!isTRUEorFALSE(as.sparse))
     stop(wmsg("'as.sparse' must be TRUE or FALSE"))
@@ -81,18 +75,13 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
   } else {
     stop(wmsg("'starts' must be a list (or NULL)"))
   }
-  # ans <- .Call2("C_h5mread", filepath, name, starts, counts, noreduce,
-  #               as.vector, as.integer, as.sparse,
-  #               method, use.H5Dread_chunk,
-  #               PACKAGE="HDF5Array")
+
   # read zarr
   zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
   zarrmat <- zarr.array$get_item(name)
   # ans <- zarrmat$get_item(list(NULL,NULL,zb_slice(0,1)))$data
   ans <- zarrmat$get_item(list(pizzarr::slice(0,1),pizzarr::slice(0,1)))$data
   
-  # if (as.sparse)
-  #   ans <- COO_SparseArray(ans[[1L]], ans[[2L]], ans[[3L]], check=FALSE)
   if (is.null(starts) || !order_starts)
     return(ans)
   index <- lapply(seq_along(starts0),
@@ -109,6 +98,6 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
     ans[index[[1L]]]
   } else {
     ## Sanity check (should never happen).
-    stop(wmsg(".Call entry point C_h5mread returned an unexpected object"))
+    stop(wmsg(".Call entry point C_zarrmread returned an unexpected object"))
   }
 }
