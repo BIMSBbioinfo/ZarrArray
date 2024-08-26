@@ -70,15 +70,6 @@ setMethod("is_sparse", "ZarrRealizationSink", function(x) x@as_sparse)
   chunkdim
 }
 
-### Note that the supplied 'as.sparse' value is stored in the 'as_sparse'
-### slot of the returned object, and that's all. It doesn't change how the
-### data will be laid out to the Zarr file in anyway (Zarr doesn't support
-### sparse storage at the moment). The only reason we store the supplied
-### 'as.sparse' value in the object is so that we can propagate it later
-### when we coerce the object to ZarrArraySeed.
-### Unlike with rZarr::h5createDataset(), if 'chunkdim' is NULL then an
-### automatic chunk geometry will be used. To write "unchunked data" (a.k.a.
-### contiguous data), 'chunkdim' must be set to 0.
 ZarrRealizationSink <- function(dim, 
                                 dimnames=NULL, 
                                 type="double",
@@ -121,7 +112,7 @@ ZarrRealizationSink <- function(dim,
   if (is.null(dimnames)) {
     dimnames <- vector("list", length(dim))
   } else {
-    h5writeDimnames(dimnames, filepath, name)
+    zarrwriteDimnames(dimnames, filepath, name)
   }
   new2("ZarrRealizationSink", 
        dim=dim, 
@@ -138,25 +129,11 @@ ZarrRealizationSink <- function(dim,
 ### Writing data to an ZarrRealizationSink object
 ###
 
-# setMethod("write_block", "ZarrRealizationSink",
-#           function(sink, viewport, block)
-#           {
-#             # if (!is.array(block))
-#             #   block <- as.array(block)
-#             # h5write(block, sink@filepath, sink@name,
-#             #         start=start(viewport), count=width(viewport))
-#             # sink
-#             temp2(sink, viewport, block)
-#           }
-# )
-
 setMethod("write_block", "ZarrRealizationSink",
           function(sink, viewport, block)
           {
               if (!is.array(block))
                 block <- as.array(block)
-              # h5write(block, sink@filepath, sink@name,
-              #         start=start(viewport), count=width(viewport))
               zarrarray <- pizzarr::zarr_open(store = sink@filepath, mode = "w")
               zarrarray$create_dataset(name = sink@name,
                                        data = block,
@@ -164,18 +141,6 @@ setMethod("write_block", "ZarrRealizationSink",
               sink
           }
 )
-
-# temp2 <- function(sink, viewport, block){
-#   if (!is.array(block))
-#     block <- as.array(block)
-#   # h5write(block, sink@filepath, sink@name,
-#   #         start=start(viewport), count=width(viewport))
-#   zarrarray <- pizzarr::zarr_open(store = sink@filepath, mode = "w")
-#   zarrarray$create_dataset(name = sink@name,
-#                            data = block,
-#                            shape = dim(block))
-#   sink
-# }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercing an ZarrRealizationSink object

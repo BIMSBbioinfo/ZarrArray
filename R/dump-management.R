@@ -81,7 +81,6 @@ normalize_dump_filepath <- function(filepath)
     stop(wmsg("'filepath' must be a non-empty string specifying the ",
               "path to a new or existing Zarr file"))
   if (!file.exists(filepath))
-    # h5createFile(filepath)
     pizzarr::zarr_open(store = filepath)
   tools::file_path_as_absolute(filepath)
 }
@@ -191,65 +190,6 @@ getZarrDumpDir <- function()
   .get_ZarrArray_global_option("dump.dir")
 }
 
-### Create auto file as an empty Zarr file if it doesn't exist yet.
-###
-### !!! IMPORTANT CHANGE IN ZarrArray 1.31.4 !!!
-###
-### In ZarrArray 1.31.4 we moved away from the global counter approach used
-### in .get_dump_autofile()!
-### The global counter approach was failing to generate unique "automatique
-### dump files" across workers when using BiocParallel::SnowParam(). For
-### example using this code:
-###
-###   library(BiocParallel)
-###   register(SnowParam(workers=2))
-###   res <- bplapply(1:5, function(i) ZarrArray::getZarrDumpFile(for.use=TRUE))
-###   unlist(res)
-###
-### was returning the following with ZarrArray < 1.31.4:
-###
-###   [1] "/tmp/RtmpVEnUTi/ZarrArray_dump/auto00001.h5"
-###   [2] "/tmp/RtmpVEnUTi/ZarrArray_dump/auto00002.h5"
-###   [3] "/tmp/RtmpVEnUTi/ZarrArray_dump/auto00003.h5"
-###   [4] "/tmp/RtmpLpy4Ru/ZarrArray_dump/auto00001.h5"
-###   [5] "/tmp/RtmpLpy4Ru/ZarrArray_dump/auto00002.h5"
-###
-### File names were unique within a worker (each worker uses its own "dump dir"
-### obtained with getZarrDumpDir()). However the dump dirs get destroyed at
-### the end of the bplapply() call thus breaking any ZarrArray object pointing
-### at them.
-### So in ZarrArray 1.31.4 we made a first change to address the above issue
-### by having all workers use the same "dump dir". Note that this introduces
-### a new difficulty which is that workers don't necessarily have access
-### to the file system seen by the main R process (this happens on some
-### clusters), but this is another story.
-### We this first change we were getting:
-###
-###   [1] "/tmp/Rtmp3zyYrg/ZarrArray_dump/auto00001.h5"
-###   [2] "/tmp/Rtmp3zyYrg/ZarrArray_dump/auto00002.h5"
-###   [3] "/tmp/Rtmp3zyYrg/ZarrArray_dump/auto00003.h5"
-###   [4] "/tmp/Rtmp3zyYrg/ZarrArray_dump/auto00001.h5"
-###   [5] "/tmp/Rtmp3zyYrg/ZarrArray_dump/auto00002.h5"
-###
-### But the problem is that now the "automatique dump files" are no longer
-### unique across workers!
-### So we decided to replace the global counter approach with the tempfile()
-### approach. With this second change we get:
-###
-###   [1] "/tmp/RtmpCMkJSO/ZarrArray_dump/auto2d2ed559eb9bf.h5"
-###   [2] "/tmp/RtmpCMkJSO/ZarrArray_dump/auto2d2ed1e06d072.h5"
-###   [3] "/tmp/RtmpCMkJSO/ZarrArray_dump/auto2d2ed2f3c6dfe.h5"
-###   [4] "/tmp/RtmpCMkJSO/ZarrArray_dump/auto2d2e32c00b14f.h5"
-###   [5] "/tmp/RtmpCMkJSO/ZarrArray_dump/auto2d2e356b6f184.h5"
-###
-### Everything looks good. So now sometyhing like:
-###
-###   make_mat <- function(i) matrix(10*i + runif(12), nrow=2)
-###   bplapply(1:5, function(i) ZarrArray::writeZarrArray(make_mat(i)))
-###
-### is finally working (it has never worked before), which was the ultimate
-### goal all along.
-#.get_dump_autofile <- function(increment=FALSE)
 .get_dump_autofile <- function()
 {
   ## Replacing the global counter approach used in ZarrArray < 1.31.4
