@@ -12,6 +12,6 @@ Imports: utils, stats, tools, Matrix, BiocGenerics (>= 0.31.5),
          S4Vectors, IRanges, S4Arrays (>= 1.1.1), pizzarr
 LinkingTo: S4Vectors (>= 0.27.13)
 Remotes:
-  keller-mark/pizzarr
+  Artur-man/pizzarr
 SystemRequirements: GNU make
 RoxygenNote: 7.3.2
