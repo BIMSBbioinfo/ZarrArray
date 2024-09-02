@@ -11,12 +11,19 @@
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
 
+setClassUnion(
+    "Array_OR_array_OR_df",
+    # set this as seed or normal array
+    # c("Array", "array", "data.frame", "ZarrArray")
+    c("Array", "data.frame", "ZarrArraySeed")
+)
+
 .Zattrs <- setClass(
   Class="Zattrs",
   contains="list")
 
 #' @exportClass ZarrArray SpatialData
-setClass(
+.ZarrArray <- setClass(
   Class="ZarrArray",
    
   # can we replace 'Array' with DelayedArray here ?
@@ -25,7 +32,7 @@ setClass(
   
   # temporarily supporting pointers,
   # for the purpose of development...
-  slots=c(seed="ZarrArraySeed", zattrs="Zattrs"))
+  slots=c(seed="Array_OR_array_OR_df", zattrs="Zattrs"))
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
@@ -37,19 +44,21 @@ setMethod("DelayedArray", "ZarrArraySeed",
 
 ### Works directly on an ZarrArraySeed object, in which case it must be
 ### called with a single argument.
-ZarrArray <- function(filepath, name, as.sparse=FALSE, type=NA)
+ZarrArray <- function(data, name, as.sparse=FALSE, type=NA)
 {
-  if (is(filepath, "ZarrArraySeed")) {
+  if (is(data, "ZarrArraySeed")) {
     if (!(missing(name) &&
           identical(as.sparse, FALSE) &&
           identical(type, NA)))
       stop(wmsg("ZarrArray() must be called with a single argument ",
                 "when passed an ZarrArraySeed object"))
-    seed <- filepath
+    seed <- data
+  } else if (is(data, "Array") || is(data, "array")) {
+    seed <- data
   } else {
-    seed <- ZarrArraySeed(filepath, name, as.sparse=as.sparse, type=type)
+    seed <- ZarrArraySeed(filepath = data, name, as.sparse=as.sparse, type=type)
   }
-  DelayedArray(seed)
+  .ZarrArray(seed = DelayedArray(seed))
 }
 
 setReplaceMethod("is_sparse", "ZarrArray",

@@ -19,7 +19,8 @@ import(DelayedArray)
 
 exportClasses(
     ZarrArraySeed,
-    ZarrArray, ZarrMatrix,
+    ZarrArray, 
+    ZarrMatrix,
     ZarrRealizationSink
 )
 
