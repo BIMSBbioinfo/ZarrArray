@@ -3,8 +3,8 @@
 .DUMP_NAMES_GLOBAL_COUNTER_FILEPATH <- NULL
 .DATASET_CREATION_GLOBAL_COUNTER_FILEPATH <- NULL
 
-# .onLoad <- function(libname, pkgname)
-# {
+.onLoad <- function(libname, pkgname)
+{
 #   #.DUMP_FILES_GLOBAL_COUNTER_FILEPATH <<-
 #   #    init_Zarr_dump_files_global_counter()
 #   .DUMP_NAMES_GLOBAL_COUNTER_FILEPATH <<-
@@ -20,7 +20,7 @@
 #   file.create(get_Zarr_dump_logfile())
 #   .DATASET_CREATION_GLOBAL_COUNTER_FILEPATH <<-
 #     init_Zarr_dataset_creation_global_counter()
-# }
+}
 
 .onUnload <- function(libpath)
 {

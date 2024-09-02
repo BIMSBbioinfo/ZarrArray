@@ -11,7 +11,6 @@
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
 
-
 setClass("ZarrArray",
          contains="DelayedArray",
          representation(seed="ZarrArraySeed")
