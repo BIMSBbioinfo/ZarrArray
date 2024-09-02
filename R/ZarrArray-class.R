@@ -34,6 +34,37 @@ setClassUnion(
   # for the purpose of development...
   slots=c(seed="Array_OR_array_OR_df", zattrs="Zattrs"))
 
+#' @rdname ZarrArray
+#' @importFrom S4Vectors metadata
+#' @export
+setMethod("metadata", "ZarrArray", function(x) {
+  x@metadata
+})
+
+#' @importFrom Rarr read_zarr_array
+as.array.ZarrArray <- function(x, i) {
+  if (is.data.frame(x@seed)) {
+    as.array(as.matrix(x@seed))
+  } else {
+    as.array(x@seed)
+  }
+}
+
+#' @rdname ZarrArray
+#' @export
+setMethod("as.array", "ZarrArray", as.array.ZarrArray)
+
+#' 
+aperm.ZarrArray <- function(a, perm) {
+  if (missing(perm)) perm <- NULL
+  ZarrArray(aperm(a@seed, perm), type = type(mat))
+}
+
+#' @rdname ZarrArray
+#' @importFrom BiocGenerics aperm
+#' @export
+setMethod("aperm", "ZarrArray", aperm.ZarrArray)
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
@@ -93,14 +124,3 @@ setAs("ZarrMatrix", "ZarrArray", function(from) from)  # no-op
 setAs("ANY", "ZarrMatrix",
       function(from) as(as(from, "ZarrArray"), "ZarrMatrix")
 )
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### show
-###
-
-# setMethod("show",
-#           "ZarrArray",
-#           definition = function(object){
-#             cat(paste0("<", paste(object@seed@dim, collapse = " x "), "> ", class(object), " object of type '", object@seed@type, "':\n"))
-#           }
-# )
