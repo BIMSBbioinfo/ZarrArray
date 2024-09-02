@@ -11,11 +11,21 @@
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
 
-setClass("ZarrArray",
-         contains="DelayedArray",
-         representation(seed="ZarrArraySeed")
-)
+.Zattrs <- setClass(
+  Class="Zattrs",
+  contains="list")
 
+#' @exportClass ZarrArray SpatialData
+setClass(
+  Class="ZarrArray",
+   
+  # can we replace 'Array' with DelayedArray here ?
+  # contains=c("Array", "Annotated"),
+  contains = c("DelayedArray", "Annotated"),
+  
+  # temporarily supporting pointers,
+  # for the purpose of development...
+  slots=c(seed="ZarrArraySeed", zattrs="Zattrs"))
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
