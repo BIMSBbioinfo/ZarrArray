@@ -11,11 +11,59 @@
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
 
-setClass("ZarrArray",
-         contains="DelayedArray",
-         representation(seed="ZarrArraySeed")
+setClassUnion(
+    "Array_OR_array_OR_df",
+    # set this as seed or normal array
+    # c("Array", "array", "data.frame", "ZarrArray")
+    c("Array", "data.frame", "ZarrArraySeed")
 )
 
+.Zattrs <- setClass(
+  Class="Zattrs",
+  contains="list")
+
+#' @exportClass ZarrArray SpatialData
+.ZarrArray <- setClass(
+  Class="ZarrArray",
+   
+  # can we replace 'Array' with DelayedArray here ?
+  # contains=c("Array", "Annotated"),
+  contains = c("DelayedArray", "Annotated"),
+  
+  # temporarily supporting pointers,
+  # for the purpose of development...
+  slots=c(seed="Array_OR_array_OR_df", zattrs="Zattrs"))
+
+#' @rdname ZarrArray
+#' @importFrom S4Vectors metadata
+#' @export
+setMethod("metadata", "ZarrArray", function(x) {
+  x@metadata
+})
+
+#' @importFrom Rarr read_zarr_array
+as.array.ZarrArray <- function(x, i) {
+  if (is.data.frame(x@seed)) {
+    as.array(as.matrix(x@seed))
+  } else {
+    as.array(x@seed)
+  }
+}
+
+#' @rdname ZarrArray
+#' @export
+setMethod("as.array", "ZarrArray", as.array.ZarrArray)
+
+#' 
+aperm.ZarrArray <- function(a, perm) {
+  if (missing(perm)) perm <- NULL
+  ZarrArray(aperm(a@seed, perm), type = type(mat))
+}
+
+#' @rdname ZarrArray
+#' @importFrom BiocGenerics aperm
+#' @export
+setMethod("aperm", "ZarrArray", aperm.ZarrArray)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
@@ -27,19 +75,21 @@ setMethod("DelayedArray", "ZarrArraySeed",
 
 ### Works directly on an ZarrArraySeed object, in which case it must be
 ### called with a single argument.
-ZarrArray <- function(filepath, name, as.sparse=FALSE, type=NA)
+ZarrArray <- function(data, name, as.sparse=FALSE, type=NA)
 {
-  if (is(filepath, "ZarrArraySeed")) {
+  if (is(data, "ZarrArraySeed")) {
     if (!(missing(name) &&
           identical(as.sparse, FALSE) &&
           identical(type, NA)))
       stop(wmsg("ZarrArray() must be called with a single argument ",
                 "when passed an ZarrArraySeed object"))
-    seed <- filepath
+    seed <- data
+  } else if (is(data, "Array") || is(data, "array")) {
+    seed <- data
   } else {
-    seed <- ZarrArraySeed(filepath, name, as.sparse=as.sparse, type=type)
+    seed <- ZarrArraySeed(filepath = data, name, as.sparse=as.sparse, type=type)
   }
-  DelayedArray(seed)
+  .ZarrArray(seed = DelayedArray(seed))
 }
 
 setReplaceMethod("is_sparse", "ZarrArray",
@@ -74,14 +124,3 @@ setAs("ZarrMatrix", "ZarrArray", function(from) from)  # no-op
 setAs("ANY", "ZarrMatrix",
       function(from) as(as(from, "ZarrArray"), "ZarrMatrix")
 )
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### show
-###
-
-# setMethod("show",
-#           "ZarrArray",
-#           definition = function(object){
-#             cat(paste0("<", paste(object@seed@dim, collapse = " x "), "> ", class(object), " object of type '", object@seed@type, "':\n"))
-#           }
-# )

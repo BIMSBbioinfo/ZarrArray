@@ -203,6 +203,38 @@ setMethod("dimnames", "ZarrArraySeed",
           function(x) NULL
 )
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### as.array()
+###
+
+#' @importFrom pizzarr read_zarr_array
+as.array.ZarrArraySeed <- function(x) {
+
+  # open zarr
+  zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
+  zarrmat <- zarr.array$get_item(x@name)
+  
+  # return
+  as.array(zarrmat$get_item("...")$data)
+}
+
+#' @rdname ZarrArraySeed
+#' @export
+setMethod("as.array", "ZarrArraySeed", as.array.ZarrArraySeed)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### aperm()
+###
+
+#' 
+aperm.ZarrArraySeed <- function(a, perm) {
+  aperm(as.array(a), perm = perm)
+}
+
+#' @rdname ZarrArraySeed
+#' @importFrom BiocGenerics aperm
+#' @export
+setMethod("aperm", "ZarrArraySeed", aperm.ZarrArraySeed)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### extract_array()
