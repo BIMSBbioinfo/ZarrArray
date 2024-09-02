@@ -211,28 +211,32 @@ setMethod("dimnames", "ZarrArraySeed",
 .extract_array_from_ZarrArraySeed <- function(x, index)
 {
   # check indices
-  if(!is.sequential(index)){
-    stop("You can only use sequential indices with ZarrArray")
-  }
   as_int <- !is.na(x@type) && x@type == "integer"
-  
+
   # open zarr
   zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
   zarrmat <- zarr.array$get_item(x@name)
   
   # create slices
-  slices <- mapply(function(x,y){
+  ind <- mapply(function(x,y){
     if(length(x) == 0){
       return(pizzarr::slice(0,0))
+    } else if(length(x) == 1){
+      return(pizzarr::slice(x,x))
     } else if(is.null(x)){
       return(pizzarr::slice(1,y))
-    } else {
-      return(pizzarr::slice(min(x),max(x)))
+    } else if(length(x) > 1){
+      # if(is.sequential(list(x))){
+      #   return(pizzarr::slice(min(x),max(x)))
+      # } else {
+      #   return(x)
+      # }
+      return(x)
     }
-  }, index, zarrmat$get_shape())
-  
-  # get zarr values given slices
-  ans <- zarrmat$get_item(slices)$data
+  }, index, zarrmat$get_shape(), SIMPLIFY = FALSE)
+
+  # get zarr values given slices or indices
+  ans <- zarrmat$get_item(ind)$data
   ans
 }
 

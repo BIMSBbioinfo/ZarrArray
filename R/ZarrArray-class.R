@@ -11,7 +11,6 @@
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
 
-
 setClass("ZarrArray",
          contains="DelayedArray",
          representation(seed="ZarrArraySeed")
@@ -80,9 +79,9 @@ setAs("ANY", "ZarrMatrix",
 ### show
 ###
 
-setMethod("show",
-          "ZarrArray",
-          definition = function(object){
-            cat(paste0("<", paste(object@seed@dim, collapse = " x "), "> ", class(object), " object of type '", object@seed@type, "':\n"))
-          }
-)
+# setMethod("show",
+#           "ZarrArray",
+#           definition = function(object){
+#             cat(paste0("<", paste(object@seed@dim, collapse = " x "), "> ", class(object), " object of type '", object@seed@type, "':\n"))
+#           }
+# )
