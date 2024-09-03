@@ -11,18 +11,12 @@
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
 
-setClassUnion(
-    "Array_OR_array_OR_df",
-    # set this as seed or normal array
-    # c("Array", "array", "data.frame", "ZarrArray")
-    c("Array", "data.frame", "ZarrArraySeed")
-)
-
+#' @exportClass ZarrArray Zattrs
 .Zattrs <- setClass(
   Class="Zattrs",
   contains="list")
 
-#' @exportClass ZarrArray SpatialData
+#' @exportClass ZarrArray ZarrArray
 .ZarrArray <- setClass(
   Class="ZarrArray",
    

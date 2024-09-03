@@ -4,7 +4,6 @@ Zarr backend for DelayedArray objects
 
 ## Installation
 
-
 ``` r
 if (!require("devtools", quietly = TRUE))
     install.packages("devtools")
