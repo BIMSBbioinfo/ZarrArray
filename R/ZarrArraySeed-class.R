@@ -277,7 +277,7 @@ setMethod("aperm", "ZarrArraySeed", aperm.ZarrArraySeed)
   }, index, zarrmat$get_shape(), SIMPLIFY = FALSE)
 
   # get zarr values given slices or indices
-  ans <- zarrmat$get_item(ind)$data
+  ans <- zarrmat$get_orthogonal_selection(ind)$data
   ans
 }
 
