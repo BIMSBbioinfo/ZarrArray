@@ -12,16 +12,16 @@ import(S4Arrays)
 import(SparseArray)
 import(DelayedArray)
 
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
 ###
 
 exportClasses(
-    ZarrArraySeed,
-    ZarrArray, 
-    ZarrMatrix,
-    ZarrRealizationSink
+  Zattrs,
+  ZarrArraySeed,
+  ZarrArray, 
+  ZarrMatrix,
+  ZarrRealizationSink
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -32,7 +32,11 @@ export(
     get_zarrmread_returned_type, zarr_mread,
     set_zarrdimnames, get_zarrdimnames, zarrwriteDimnames, zarrreadDimnames,
     ZarrArraySeed,
+    .ZarrArraySeed,
     ZarrArray,
+    .ZarrArray,
+    # Zattrs,
+    # .Zattrs,
     setZarrDumpDir, getZarrDumpDir,
     setZarrDumpFile, getZarrDumpFile, lsZarrDumpFile,
     setZarrDumpName, getZarrDumpName,
@@ -43,3 +47,4 @@ export(
     appendDatasetCreationToZarrDumpLog, showZarrDumpLog,
     ZarrRealizationSink, writeZarrArray
 )
+

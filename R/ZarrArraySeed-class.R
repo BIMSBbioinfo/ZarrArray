@@ -2,7 +2,8 @@
 ### ZarrArraySeed objects
 ### -------------------------------------------------------------------------
 
-setClass("ZarrArraySeed",
+#' @exportClass ZarrArraySeed ZarrArray
+.ZarrArraySeed <- setClass("ZarrArraySeed",
          contains="Array",
          representation(
            ## ----------------- user supplied slots -----------------
@@ -36,6 +37,14 @@ setClass("ZarrArraySeed",
          )
 )
 
+# class union taken from HelenaLC/SpatialData
+setClassUnion(
+  "Array_OR_array_OR_df",
+  # set this as seed or normal array
+  # c("Array", "array", "data.frame", "ZarrArray")
+  c("Array", "data.frame", "ZarrArraySeed")
+  # c("Array", "data.frame")
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
