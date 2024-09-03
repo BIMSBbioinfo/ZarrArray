@@ -26,7 +26,9 @@
   
   # temporarily supporting pointers,
   # for the purpose of development...
-  slots=c(seed="Array_OR_array_OR_df", zattrs="Zattrs"))
+  slots=c(seed="Array_OR_array_OR_df", zattrs="Zattrs")
+  # slots=c(data="Array_OR_array_OR_df", zattrs="Zattrs")
+)
 
 #' @rdname ZarrArray
 #' @importFrom S4Vectors metadata
@@ -37,10 +39,10 @@ setMethod("metadata", "ZarrArray", function(x) {
 
 #' @importFrom Rarr read_zarr_array
 as.array.ZarrArray <- function(x, i) {
-  if (is.data.frame(x@seed)) {
-    as.array(as.matrix(x@seed))
+  if (is.data.frame(x@data)) {
+    as.array(as.matrix(x@data))
   } else {
-    as.array(x@seed)
+    as.array(x@data)
   }
 }
 
@@ -51,7 +53,7 @@ setMethod("as.array", "ZarrArray", as.array.ZarrArray)
 #' 
 aperm.ZarrArray <- function(a, perm) {
   if (missing(perm)) perm <- NULL
-  ZarrArray(aperm(a@seed, perm), type = type(mat))
+  ZarrArray(aperm(a@data, perm), type = type(mat))
 }
 
 #' @rdname ZarrArray
@@ -83,6 +85,7 @@ ZarrArray <- function(data, name, as.sparse=FALSE, type=NA)
   } else {
     seed <- ZarrArraySeed(filepath = data, name, as.sparse=as.sparse, type=type)
   }
+  # .ZarrArray(data = DelayedArray(seed))
   .ZarrArray(seed = DelayedArray(seed))
 }
 
@@ -90,6 +93,7 @@ setReplaceMethod("is_sparse", "ZarrArray",
                  function(x, value)
                  {
                    is_sparse(x@seed) <- value
+                   # is_sparse(x@data) <- value
                    x
                  }
 )
