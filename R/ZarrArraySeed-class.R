@@ -208,8 +208,7 @@ setMethod("dim", "ZarrArraySeed", function(x) x@dim)
 
 ### Does access the file!
 setMethod("dimnames", "ZarrArraySeed",
-          # function(x) zarrreadDimnames(x@filepath, x@name, as.character=TRUE)
-          function(x) NULL
+          function(x) zarrreadDimnames(x@filepath, x@name, as.character=TRUE)
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

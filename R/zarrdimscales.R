@@ -9,10 +9,10 @@
 ### zarrisdimscale()
 ###
 
-zarrisdimscale <- function(filepath, name)
-{
-  .Call2("C_zarrisdimscale", filepath, name, PACKAGE="HDF5Array")
-}
+# zarrisdimscale <- function(filepath, name)
+# {
+#   .Call2("C_zarrisdimscale", filepath, name, PACKAGE="HDF5Array")
+# }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -24,10 +24,48 @@ zarrisdimscale <- function(filepath, name)
 ### for Dimension Scale 'scalename'.
 zarrgetdimscales <- function(filepath, name, scalename=NA)
 {
+  # check scalename
   stopifnot(isSingleStringOrNA(scalename))
   scalename <- as.character(scalename)
-  .Call2("C_zarrgetdimscales", filepath, name, scalename,
-         PACKAGE="HDF5Array")
+  
+  # open zarr
+  zarr <- pizzarr::zarr_open(store = filepath, mode = "r")
+  zarr_store <- zarr$get_store()
+  zarr_array_ndim <- zarr$get_item(name)$get_ndim()
+  
+  # check group 
+  if(zarr$contains_item(paste(name, "_", scalename))){    
+    
+    # get dimnames
+    zarr_group <- zarr$get_item(paste(name, "_", scalename))  
+    if(inherits(zarr_group, "ZarrGroup")){
+      
+      # check ZarrArray names
+      zarr_group_mem <- zarr_group$get_store()$to_list()
+      zarr_group_mem <- zarr_group_mem[sapply(zarr_group_mem, function(z) inherits(zarr_group$get_item(z), "ZarrArray"))]
+      if(length(zarr_group_mem) > 0){
+        zarr_group_mem <- na.omit(as.numeric(zarr_group_mem))
+        zarr_group_mem <- zarr_group_mem[zarr_group_mem < zarr_array_ndim]
+        
+        if(length(zarr_group_mem) > 0){
+          return(as.character(zarr_group_mem)) 
+      
+        # no scales are saved as integers (index of dimensions, e.g. 1,2,3)    
+        } else {
+          return(NULL)
+        }
+      # there are no datasets under group  
+      } else {
+        return(NULL)
+      }
+    # scales are not stored in a group 
+    } else {
+      return(NULL)
+    }
+  # if group doesn't exist, return NULL
+  } else{
+    return(NULL)
+  }
 }
 
 ### name:      The name of the dataset on which to set Dimension Scales.

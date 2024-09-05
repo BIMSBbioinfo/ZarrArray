@@ -220,14 +220,13 @@ zarrreadDimnames <- function(filepath, name, as.character=FALSE)
     if (!isTRUEorFALSE(as.character))
         stop(wmsg("'as.character' must be TRUE or FALSE"))
     zarrdimnames <- get_zarrdimnames(filepath, name)
-    dimlabels <- zarrgetdimlabels(filepath, name)
-    if (all(is.na(zarrdimnames)) && is.null(dimlabels))
+    if (all(is.null(zarrdimnames)))
         return(NULL)
     lapply(setNames(zarrdimnames, dimlabels),
            function(zarrdn) {
                if (is.na(zarrdn))
                    return(NULL)
-               dn <- zarrmread(filepath, zarrdn, as.vector=TRUE)
+               dn <- zarr_mread(filepath, zarrdn, as.vector=TRUE)
                if (as.character) as.character(dn) else dn
            })
 }

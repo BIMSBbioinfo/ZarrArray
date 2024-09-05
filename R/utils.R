@@ -134,3 +134,10 @@ get_global_counter <- function(filepath, increment=FALSE)
     .write_counter(counter + 1L, locked_path)
   counter
 }
+
+is_integer <- function(s) {
+  if(is.atomic(s) && is.numeric(s) && all(s %% 1 == 0)) {
+    return(TRUE)
+  }
+  return(FALSE)
+}
