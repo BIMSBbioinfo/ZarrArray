@@ -34,22 +34,30 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
   zarr_array_ndim <- zarr$get_item(name)$get_ndim()
   
   # check group 
-  if(zarr$contains_item(paste(name, "_", scalename))){    
+  if(zarr$contains_item(paste0(name, "_", scalename))){    
     
     # get dimnames
-    zarr_group <- zarr$get_item(paste(name, "_", scalename))  
+    # zarr_group <- zarr$get_item(paste0(name, "_", scalename))  
+    zarr_group <- zarr_open_group(paste0(filepath, "/", name, "_", scalename))
     if(inherits(zarr_group, "ZarrGroup")){
       
       # check ZarrArray names
-      zarr_group_mem <- zarr_group$get_store()$to_list()
+      zarr_group_mem <- zarr_group$get_store()$listdir()
+      zarr_group_mem <- zarr_group_mem[!grepl("^\\.", zarr_group_mem)]
       zarr_group_mem <- zarr_group_mem[sapply(zarr_group_mem, function(z) inherits(zarr_group$get_item(z), "ZarrArray"))]
       if(length(zarr_group_mem) > 0){
         zarr_group_mem <- na.omit(as.numeric(zarr_group_mem))
-        zarr_group_mem <- zarr_group_mem[zarr_group_mem < zarr_array_ndim]
+        zarr_group_mem <- zarr_group_mem[zarr_group_mem < (zarr_array_ndim + 1)]
         
+        # read dim names
+        zarrdimnames <- list()
         if(length(zarr_group_mem) > 0){
-          return(as.character(zarr_group_mem)) 
-      
+          for(i in 1:length(zarr_group_mem)){
+            zarr_array <- zarr_open_array(paste0(filepath, "/", name, "_", scalename, "/", zarr_group_mem[i]))
+            zarrdimnames[[as.character(zarr_group_mem[i])]] <- 
+              zarr_array$get_item("...")$data
+          }
+          return(zarrdimnames)
         # no scales are saved as integers (index of dimensions, e.g. 1,2,3)    
         } else {
           return(NULL)
@@ -88,21 +96,20 @@ zarrsetdimscales <- function(filepath, name, dimscales, scalename=NA,
 }
 
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Get/set the "dimension labels" of an HDF5 dataset
-###
-### The "dimension labels" the HDF5 equivalent of the names on 'dimnames(a)'
-### in R.
-###
-
-zarrgetdimlabels <- function(filepath, name)
-{
-  .Call2("C_zarrgetdimlabels", filepath, name, PACKAGE="HDF5Array")
-}
-
-zarrsetdimlabels <- function(filepath, name, dimlabels)
-{
-  stopifnot(is.character(dimlabels))
-  invisible(.Call2("C_zarrsetdimlabels", filepath, name, dimlabels,
-                   PACKAGE="HDF5Array"))
-}
+# ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ### Get/set the "dimension labels" of an HDF5 dataset
+# ###
+# ### The "dimension labels" the HDF5 equivalent of the names on 'dimnames(a)'
+# ### in R.
+# ###
+# 
+# zarrgetdimlabels <- function(filepath, name)
+# {
+#   TODO: zarrgetdimlabels method for zarr arrays
+# }
+# 
+# zarrsetdimlabels <- function(filepath, name, dimlabels)
+# {
+#   stopifnot(is.character(dimlabels))
+#   TODO: zarrsetdimlabels method for zarr arrays
+# }

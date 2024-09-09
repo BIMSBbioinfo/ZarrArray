@@ -27,9 +27,9 @@ get_zarrdimnames <- function(filepath, name)
                   "stored in Zarr file \"", filepath, "\" (in dataset(s): ",
                   paste(paste0("\"", ds, "\""), collapse=", "), ")"))
     }
-    dimlabels <- zarrgetdimlabels(filepath, name)
-    if (!is.null(dimlabels))
-        stop(wmsg("Zarr dataset \"", name, "\" already has dimension labels"))
+    # dimlabels <- zarrgetdimlabels(filepath, name)
+    # if (!is.null(dimlabels))
+    #     stop(wmsg("Zarr dataset \"", name, "\" already has dimension labels"))
 }
 
 .validate_zarrdimnames_lengths <- function(filepath, name, zarrdimnames)
@@ -222,11 +222,13 @@ zarrreadDimnames <- function(filepath, name, as.character=FALSE)
     zarrdimnames <- get_zarrdimnames(filepath, name)
     if (all(is.null(zarrdimnames)))
         return(NULL)
-    lapply(setNames(zarrdimnames, dimlabels),
+    # TODO: check if you need get/set methods for dimlabels
+    # dimlabels <- zarrgetdimlabels(filepath, name) 
+    lapply(zarrdimnames,
            function(zarrdn) {
-               if (is.na(zarrdn))
+               if (all(is.na(zarrdn)))
                    return(NULL)
-               dn <- zarr_mread(filepath, zarrdn, as.vector=TRUE)
+               dn <- zarrdn
                if (as.character) as.character(dn) else dn
            })
 }
