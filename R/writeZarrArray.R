@@ -132,13 +132,14 @@ ZarrRealizationSink <- function(dim,
 setMethod("write_block", "ZarrRealizationSink",
           function(sink, viewport, block)
           {
-              if (!is.array(block))
-                block <- as.array(block)
-              zarrarray <- pizzarr::zarr_open(store = sink@filepath, mode = "w")
-              zarrarray$create_dataset(name = sink@name,
-                                       data = block,
-                                       shape = dim(block))
-              sink
+            if (!is.array(block))
+              block <- as.array(block)
+            zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
+                                                  path = sink@name, 
+                                                  shape = dim(block),
+                                                  mode = "w")
+            zarrarray$set_item("...", block)
+            sink
           }
 )
 

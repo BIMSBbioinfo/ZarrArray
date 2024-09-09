@@ -204,7 +204,9 @@ zarrwriteDimnames <- function(dimnames, filepath, name, group=NA, zarrdimnames=N
     for (along in which(not_NULL)) {
         dn <- dimnames[[along]]
         zarrdn <- zarrdimnames[[along]]
-        zarrdimname <- pizzarr::zarr_open_array(store = filepath, path = zarrdn, mode = "a", shape = length(dn))
+        zarrdimname <- pizzarr::zarr_open_array(store = filepath, path = zarrdn, 
+                                                mode = "w", shape = length(dn), 
+                                                dtype = "<U20")
         zarrdimname$set_item("...", array(dn))
     }
 }
