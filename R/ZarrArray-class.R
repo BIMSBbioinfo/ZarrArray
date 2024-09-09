@@ -1,4 +1,20 @@
 ### =========================================================================
+### Zattr object
+### -------------------------------------------------------------------------
+###
+
+#' @exportClass ZarrArray Zattrs
+.Zattrs <- setClass(
+  Class="Zattrs",
+  contains="list")
+
+Zattrs <- function(...)
+{
+  .Zattrs(...)
+}
+
+
+### =========================================================================
 ### ZarrArray objects
 ### -------------------------------------------------------------------------
 ###
@@ -10,11 +26,6 @@
 ### from the user. So the user will see and manipulate ZarrArray and
 ### ZarrMatrix objects instead of DelayedArray and DelayedMatrix objects.
 ###
-
-#' @exportClass ZarrArray Zattrs
-.Zattrs <- setClass(
-  Class="Zattrs",
-  contains="list")
 
 #' @exportClass ZarrArray ZarrArray
 .ZarrArray <- setClass(
