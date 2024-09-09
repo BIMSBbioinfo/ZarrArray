@@ -27,9 +27,10 @@ get_zarrdimnames <- function(filepath, name)
                   "stored in Zarr file \"", filepath, "\" (in dataset(s): ",
                   paste(paste0("\"", ds, "\""), collapse=", "), ")"))
     }
-    dimlabels <- zarrgetdimlabels(filepath, name)
-    if (!is.null(dimlabels))
-        stop(wmsg("Zarr dataset \"", name, "\" already has dimension labels"))
+    # TODO: check if you need get/set methods for dimlabels
+    # dimlabels <- zarrgetdimlabels(filepath, name)
+    # if (!is.null(dimlabels))
+    #     stop(wmsg("Zarr dataset \"", name, "\" already has dimension labels"))
 }
 
 .validate_zarrdimnames_lengths <- function(filepath, name, zarrdimnames)
@@ -197,22 +198,17 @@ zarrwriteDimnames <- function(dimnames, filepath, name, group=NA, zarrdimnames=N
 
     ## Create group if needed.
     if (!is.na(group) && !zarrexists(filepath, group))
-        zarrcreateGroup(filepath, group)
-
+      pizzarr::zarr_open_group(store = filepath, path = group, mode = "w")
+        
     ## Write dimnames.
     for (along in which(not_NULL)) {
         dn <- dimnames[[along]]
         zarrdn <- zarrdimnames[[along]]
-        zarrwrite(dn, filepath, zarrdn)
+        zarrdimname <- pizzarr::zarr_open_array(store = filepath, path = zarrdn, 
+                                                mode = "w", shape = length(dn), 
+                                                dtype = "<U20")
+        zarrdimname$set_item("...", array(dn))
     }
-
-    ## Attach new datasets to dimensions of dataset 'name'.
-    set_zarrdimnames(filepath, name, zarrdimnames)
-
-    ## Set the dimension labels.
-    dimlabels <- names(dimnames)
-    if (!is.null(dimlabels) && any(nzchar(dimlabels)))
-        zarrsetdimlabels(filepath, name, dimlabels)
 }
 
 zarrreadDimnames <- function(filepath, name, as.character=FALSE)
@@ -220,14 +216,15 @@ zarrreadDimnames <- function(filepath, name, as.character=FALSE)
     if (!isTRUEorFALSE(as.character))
         stop(wmsg("'as.character' must be TRUE or FALSE"))
     zarrdimnames <- get_zarrdimnames(filepath, name)
-    dimlabels <- zarrgetdimlabels(filepath, name)
-    if (all(is.na(zarrdimnames)) && is.null(dimlabels))
+    if (all(is.na(zarrdimnames)))
         return(NULL)
-    lapply(setNames(zarrdimnames, dimlabels),
+    # TODO: check if you need get/set methods for dimlabels
+    # dimlabels <- zarrgetdimlabels(filepath, name) 
+    lapply(zarrdimnames,
            function(zarrdn) {
-               if (is.na(zarrdn))
+               if (all(is.na(zarrdn)))
                    return(NULL)
-               dn <- zarrmread(filepath, zarrdn, as.vector=TRUE)
+               dn <- zarrdn
                if (as.character) as.character(dn) else dn
            })
 }

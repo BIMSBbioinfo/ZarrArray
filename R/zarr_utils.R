@@ -12,7 +12,11 @@
 zarrexists <- function(filepath, name)
 {
   zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
-  grepl(".zarr$", filepath)
+  if(grepl(".zarr$", filepath)){
+    zarr.array$contains_item(name)
+  } else {
+    return(FALSE)
+  }
 }
 
 
