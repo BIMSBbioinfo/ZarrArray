@@ -214,7 +214,7 @@ zarrreadDimnames <- function(filepath, name, as.character=FALSE)
     if (!isTRUEorFALSE(as.character))
         stop(wmsg("'as.character' must be TRUE or FALSE"))
     zarrdimnames <- get_zarrdimnames(filepath, name)
-    if (all(is.null(zarrdimnames)))
+    if (all(is.na(zarrdimnames)))
         return(NULL)
     # TODO: check if you need get/set methods for dimlabels
     # dimlabels <- zarrgetdimlabels(filepath, name) 

@@ -75,17 +75,18 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
   # check scalename
   stopifnot(isSingleStringOrNA(scalename))
   scalename <- as.character(scalename)
+  scale_path <- paste0("/.", gsub("^/", "", name), "_", scalename)
   
   # only if scalename is a scale
   if(zarrisdimscale(filepath = filepath, 
-                    name = paste0(".", name, "_", scalename))){
+                    name = scale_path)){
     
     # open zarr
     zarr <- pizzarr::zarr_open(store = filepath, mode = "r")
     zarr_array_ndim <- zarr$get_item(name)$get_ndim()
     
     # get dimnames
-    zarr_group <- zarr_open_group(paste0(filepath, "/.", name, "_", scalename))
+    zarr_group <- zarr_open_group(paste0(filepath, scale_path))
     zarr_group_mem <- zarr_group$get_store()$listdir()
     zarr_group_mem <- zarr_group_mem[!grepl("^\\.", zarr_group_mem)]
     zarr_group_mem <- zarr_group_mem[sapply(zarr_group_mem, function(z) inherits(zarr_group$get_item(z), "ZarrArray"))]
@@ -97,7 +98,7 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
       zarrdimnames <- list()
       if(length(zarr_group_mem) > 0){
         for(i in 1:length(zarr_group_mem)){
-          zarr_array <- pizzarr::zarr_open_array(paste0(filepath, "/.", name, "_", scalename, "/", zarr_group_mem[i]))
+          zarr_array <- pizzarr::zarr_open_array(paste0(filepath, scale_path, "/", zarr_group_mem[i]))
           zarrdimnames[[as.character(zarr_group_mem[i])]] <- 
             zarr_array$get_item("...")$data
         }

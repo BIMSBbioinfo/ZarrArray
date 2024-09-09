@@ -208,7 +208,9 @@ setMethod("dim", "ZarrArraySeed", function(x) x@dim)
 
 ### Does access the file!
 setMethod("dimnames", "ZarrArraySeed",
-          function(x) zarrreadDimnames(x@filepath, x@name, as.character=TRUE)
+          function(x) {
+            zarrreadDimnames(x@filepath, x@name, as.character=TRUE)
+          }
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -256,7 +258,7 @@ setMethod("aperm", "ZarrArraySeed", aperm.ZarrArraySeed)
   # open zarr
   zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
   zarrmat <- zarr.array$get_item(x@name)
-  
+
   # create slices
   ind <- mapply(function(x,y){
     if(length(x) == 0){
