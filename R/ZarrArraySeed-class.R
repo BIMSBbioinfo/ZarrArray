@@ -137,6 +137,7 @@ setMethod("path", "ZarrArraySeed",
   val
 }
 
+# TODO: update the path replace method for ZarrArraySeed
 setReplaceMethod("path", "ZarrArraySeed",
                  function(object, value)
                  {

@@ -10,7 +10,6 @@ Maintainer: Artur Manukyan <artur-man@hotmail.com>
 Depends: R (>= 3.4), methods, SparseArray, DelayedArray
 Imports: utils, stats, tools, Matrix, BiocGenerics (>= 0.31.5), 
          S4Vectors, IRanges, S4Arrays (>= 1.1.1), pizzarr
-LinkingTo: S4Vectors (>= 0.27.13)
 Remotes:
   Artur-man/pizzarr
 SystemRequirements: GNU make
