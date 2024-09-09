@@ -27,6 +27,7 @@ get_zarrdimnames <- function(filepath, name)
                   "stored in Zarr file \"", filepath, "\" (in dataset(s): ",
                   paste(paste0("\"", ds, "\""), collapse=", "), ")"))
     }
+    # TODO: check if you need get/set methods for dimlabels
     # dimlabels <- zarrgetdimlabels(filepath, name)
     # if (!is.null(dimlabels))
     #     stop(wmsg("Zarr dataset \"", name, "\" already has dimension labels"))
@@ -197,22 +198,15 @@ zarrwriteDimnames <- function(dimnames, filepath, name, group=NA, zarrdimnames=N
 
     ## Create group if needed.
     if (!is.na(group) && !zarrexists(filepath, group))
-        zarrcreateGroup(filepath, group)
-
+      pizzarr::zarr_open_group(store = filepath, path = group, mode = "w")
+        
     ## Write dimnames.
     for (along in which(not_NULL)) {
         dn <- dimnames[[along]]
         zarrdn <- zarrdimnames[[along]]
-        zarrwrite(dn, filepath, zarrdn)
+        zarrdimname <- pizzarr::zarr_open_array(store = filepath, path = zarrdn, mode = "a", shape = length(dn))
+        zarrdimname$set_item("...", array(dn))
     }
-
-    ## Attach new datasets to dimensions of dataset 'name'.
-    set_zarrdimnames(filepath, name, zarrdimnames)
-
-    ## Set the dimension labels.
-    dimlabels <- names(dimnames)
-    if (!is.null(dimlabels) && any(nzchar(dimlabels)))
-        zarrsetdimlabels(filepath, name, dimlabels)
 }
 
 zarrreadDimnames <- function(filepath, name, as.character=FALSE)

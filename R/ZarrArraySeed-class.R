@@ -266,11 +266,6 @@ setMethod("aperm", "ZarrArraySeed", aperm.ZarrArraySeed)
     } else if(is.null(x)){
       return(pizzarr::slice(1,y))
     } else if(length(x) > 1){
-      # if(is.sequential(list(x))){
-      #   return(pizzarr::slice(min(x),max(x)))
-      # } else {
-      #   return(x)
-      # }
       return(x)
     }
   }, index, zarrmat$get_shape(), SIMPLIFY = FALSE)
@@ -294,60 +289,6 @@ is.sequential <- function(index){
 }
 
 setMethod("extract_array", "ZarrArraySeed", .extract_array_from_ZarrArraySeed)
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### is_sparse(), extract_sparse_array(), and OLD_extract_sparse_array()
-###
-
-### Prior to ZarrArray 1.17.8 ZarrArraySeed objects didn't have the
-### "as_sparse" slot.
-setMethod("is_sparse", "ZarrArraySeed",
-          function(x) .hasSlot(x, "as_sparse") && x@as_sparse
-)
-
-setReplaceMethod("is_sparse", "ZarrArraySeed",
-                 function(x, value)
-                 {
-                   if (!isTRUEorFALSE(value))
-                     stop(wmsg("the supplied value must be TRUE or FALSE"))
-                   if (!.hasSlot(x, "as_sparse"))
-                     x <- updateObject(x, check=FALSE)
-                   x@as_sparse <- value
-                   x
-                 }
-)
-
-### Returns a COO_SparseArray object.
-### TODO: Modify Zarrmread() so that it natively constructs and returns
-### an SVT_SparseArray object when 'as.sparse=TRUE'.
-.extract_sparse_array_from_ZarrArraySeed <- function(x, index)
-{
-  if (!is_sparse(x))
-    stop(wmsg("calling extract_sparse_array() on an ZarrArraySeed ",
-              "object is supported only if the object is sparse"))
-  ## Prior to ZarrArray 1.15.6 ZarrArraySeed objects didn't have
-  ## the "type" slot.
-  if (!.hasSlot(x, "type"))
-    return(.Zarrmread2(x@filepath, x@name, index, as.sparse=TRUE))
-  ## If the user requested a specific type when ZarrArraySeed object 'x'
-  ## was constructed then we must return a COO_SparseArray object of
-  ## that type.
-  as_int <- !is.na(x@type) && x@type == "integer"
-  ## .Zarrmread2(..., as.sparse=TRUE) returns a COO_SparseArray object.
-  ans <- .Zarrmread2(x@filepath, x@name, index, as.integer=as_int,
-                   as.sparse=TRUE)
-  if (!is.na(x@type) && type(ans) != x@type)
-    type(ans) <- x@type
-  ans
-}
-
-setMethod("extract_sparse_array", "ZarrArraySeed",
-          function(x, index)
-          {
-            coo <- .extract_sparse_array_from_ZarrArraySeed(x, index)
-            as(coo, "SVT_SparseArray")
-          }
-)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### chunkdim() getter
@@ -387,8 +328,7 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
   # get attributes
   dim <- zarr.array$get_item(name)$get_shape()
   chunkdim <- zarrchunkdim(filepath, name, adjust=TRUE)
-  # first_val <- .read_zarrdataset_first_val(filepath, name, dim)
-  
+
   new2("ZarrArraySeed", 
        filepath=filepath,
        name=name,
@@ -396,7 +336,6 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
        type=type,
        dim=dim,
        chunkdim=chunkdim,
-       # first_val=first_val)
        first_val = NULL)
 }
 
