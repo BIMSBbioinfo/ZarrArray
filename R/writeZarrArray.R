@@ -134,10 +134,16 @@ setMethod("write_block", "ZarrRealizationSink",
           {
             if (!is.array(block))
               block <- as.array(block)
+            if(sink@type == "character"){
+              sink_type <- "<U20" 
+            } else{
+              sink_type <- sink@type
+            }
             zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
                                                   path = sink@name, 
                                                   shape = dim(block),
-                                                  mode = "w")
+                                                  mode = "w", 
+                                                  dtype = sink_type)
             zarrarray$set_item("...", block)
             sink
           }
