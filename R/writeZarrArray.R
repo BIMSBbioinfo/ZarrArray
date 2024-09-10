@@ -137,7 +137,7 @@ setMethod("write_block", "ZarrRealizationSink",
             if(sink@type == "character"){
               sink_type <- "<U20" 
             } else{
-              sink_type <- sink@type
+              sink_type <- NA
             }
             zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
                                                   path = sink@name, 
