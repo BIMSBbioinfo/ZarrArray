@@ -142,7 +142,7 @@ setMethod("write_block", "ZarrRealizationSink",
             zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
                                                   path = sink@name, 
                                                   shape = dim(block),
-                                                  mode = "w", 
+                                                  mode = "a",
                                                   dtype = sink_type)
             zarrarray$set_item("...", block)
             sink
