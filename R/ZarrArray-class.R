@@ -99,7 +99,7 @@ setMethod("metadata", "ZarrArray", function(x) {
   x@metadata
 })
 
-# These methods are already available for ZarrArraySeed
+# These methods are already available for DelayedArray objects
 
 #' #' @importFrom Rarr read_zarr_array
 #' as.array.ZarrArray <- function(x, i) {
