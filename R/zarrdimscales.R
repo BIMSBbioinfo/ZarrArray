@@ -75,7 +75,11 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
   # check scalename
   stopifnot(isSingleStringOrNA(scalename))
   scalename <- as.character(scalename)
-  scale_path <- paste0("/.", gsub("^/", "", name), "_", scalename)
+  
+  # adjust scale path
+  dotted_name <- strsplit(name, split = "\\/")[[1]]
+  dotted_name[length(dotted_name)] <- paste0(".", dotted_name[length(dotted_name)])
+  scale_path <- paste0(paste(dotted_name, collapse = "/"), "_", scalename)
   
   # only if scalename is a scale
   if(zarrisdimscale(filepath = filepath, 
