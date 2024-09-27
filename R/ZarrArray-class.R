@@ -99,32 +99,6 @@ setMethod("metadata", "ZarrArray", function(x) {
   x@metadata
 })
 
-# These methods are already available for DelayedArray objects
-
-#' #' @importFrom Rarr read_zarr_array
-#' as.array.ZarrArray <- function(x, i) {
-#'   if (is.data.frame(x@data)) {
-#'     as.array(as.matrix(x@data))
-#'   } else {
-#'     as.array(x@data)
-#'   }
-#' }
-#' 
-#' #' @rdname ZarrArray
-#' #' @export
-#' setMethod("as.array", "ZarrArray", as.array.ZarrArray)
-
-#' #' 
-#' aperm.ZarrArray <- function(a, perm) {
-#'   if (missing(perm)) perm <- NULL
-#'   ZarrArray(aperm(a@data, perm), type = type(mat))
-#' }
-#' 
-#' #' @rdname ZarrArray
-#' #' @importFrom BiocGenerics aperm
-#' #' @export
-#' setMethod("aperm", "ZarrArray", aperm.ZarrArray)
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
