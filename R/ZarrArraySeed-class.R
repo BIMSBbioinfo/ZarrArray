@@ -234,7 +234,6 @@ setMethod("as.array", "ZarrArraySeed", as.array.ZarrArraySeed)
 ### aperm()
 ###
 
-#' 
 aperm.ZarrArraySeed <- function(a, perm) {
   aperm(as.array(a), perm = perm)
 }
@@ -252,24 +251,24 @@ setMethod("aperm", "ZarrArraySeed", aperm.ZarrArraySeed)
 {
   # check indices
   as_int <- !is.na(x@type) && x@type == "integer"
-
+  
   # open zarr
   zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
   zarrmat <- zarr.array$get_item(x@name)
-
+  
   # create slices
   ind <- mapply(function(x,y){
-    if(length(x) == 0){
+    if(is.null(x)){
+      return(pizzarr::slice(1,y))
+    } else if(length(x) == 0){
       return(pizzarr::slice(0,0))
     } else if(length(x) == 1){
       return(pizzarr::slice(x,x))
-    } else if(is.null(x)){
-      return(pizzarr::slice(1,y))
     } else if(length(x) > 1){
       return(x)
     }
   }, index, zarrmat$get_shape(), SIMPLIFY = FALSE)
-
+  
   # get zarr values given slices or indices
   ans <- zarrmat$get_orthogonal_selection(ind)$data
   ans
@@ -296,7 +295,6 @@ setMethod("extract_array", "ZarrArraySeed", .extract_array_from_ZarrArraySeed)
 
 ### Does NOT access the file.
 setMethod("chunkdim", "ZarrArraySeed", function(x) x@chunkdim)
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
