@@ -65,6 +65,7 @@ setReplaceMethod("zattrs", "list",
                  \(x, value) `zattrs<-`(x, Zattrs(value)))
 
 
+
 ### =========================================================================
 ### ZarrArray objects
 ### -------------------------------------------------------------------------
@@ -98,6 +99,19 @@ setReplaceMethod("zattrs", "list",
 setMethod("metadata", "ZarrArray", function(x) {
   x@metadata
 })
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### as.array()
+###
+
+#' @importFrom pizzarr read_zarr_array
+as.array.ZarrArray <- function(x) {
+  as.array(x@seed)
+}
+
+#' @rdname ZarrArraySeed
+#' @export
+setMethod("as.array", "ZarrArray", as.array.ZarrArray)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
