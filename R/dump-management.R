@@ -443,7 +443,7 @@ create_and_log_Zarr_dataset <- function(filepath, name, dim, maxdim=dim,
                                         type="double", H5type=NULL, size=NULL,
                                         chunkdim=dim, level=6L)
 {
-  zarr_array <- pizzarr::zarr_open(store = filepath, mode = "w")
+  zarr_array <- pizzarr::zarr_open(store = filepath, mode = "a")
   ZarrCreateDataset(filepath, zarr_array, name, dim, maxdim=maxdim,
                    type=type, H5type=H5type, size=size,
                    chunkdim=chunkdim, level=level)
