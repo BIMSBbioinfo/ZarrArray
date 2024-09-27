@@ -104,12 +104,11 @@ setMethod("metadata", "ZarrArray", function(x) {
 ### as.array()
 ###
 
-#' @importFrom pizzarr read_zarr_array
 as.array.ZarrArray <- function(x) {
   as.array(x@seed)
 }
 
-#' @rdname ZarrArraySeed
+#' @rdname ZarrArray
 #' @export
 setMethod("as.array", "ZarrArray", as.array.ZarrArray)
 
