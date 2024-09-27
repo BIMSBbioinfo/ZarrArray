@@ -185,8 +185,8 @@ setMethod("type", "ZarrArraySeed",
             if (!.hasSlot(x, "type"))
               return(type(x@first_val))
             type <- x@type
-            if (is.na(type))
-              type <- get_zarrmread_returned_type(x@filepath, x@name)
+            # if (is.na(type))
+            #   type <- get_zarrmread_returned_type(x@filepath, x@name)
             type
           }
 )
