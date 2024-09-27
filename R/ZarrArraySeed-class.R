@@ -127,8 +127,9 @@ setMethod("path", "ZarrArraySeed",
 .read_zarrdataset_first_val <- function(filepath, name, dim)
 {
   if (any(dim == 0L)) {
-    type <- get_zarrmread_returned_type(filepath, name)
-    val <- vector(type, 1L)  # fake value
+    # type <- get_zarrmread_returned_type(filepath, name)
+    # val <- vector(type, 1L)  # fake value
+    vector("double",1L)
   } else {
     index <- rep.int(list(1L), length(dim))
     val <- zarr_mread(filepath, name, index, as.vector=TRUE)
