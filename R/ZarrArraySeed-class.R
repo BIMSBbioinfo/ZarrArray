@@ -310,7 +310,6 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
 ### as.array()
 ###
 
-#' @importFrom pizzarr read_zarr_array
 as.array.ZarrArraySeed <- function(x) {
   
   # open zarr

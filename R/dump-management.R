@@ -81,7 +81,7 @@ normalize_dump_filepath <- function(filepath)
     stop(wmsg("'filepath' must be a non-empty string specifying the ",
               "path to a new or existing Zarr file"))
   if (!file.exists(filepath))
-    pizzarr::zarr_open(store = filepath)
+    pizzarr::zarr_open(store = filepath, mode = "a")
   tools::file_path_as_absolute(filepath)
 }
 
@@ -440,14 +440,11 @@ showZarrDumpLog <- function()
 }
 
 create_and_log_Zarr_dataset <- function(filepath, name, dim, maxdim=dim,
-                                        type="double", H5type=NULL, size=NULL,
+                                        type="double", size=NULL,
                                         chunkdim=dim, level=6L)
 {
   zarr_array <- pizzarr::zarr_open(store = filepath, mode = "a")
   ZarrCreateDataset(filepath, zarr_array, name, dim, maxdim=maxdim,
-                   type=type, H5type=H5type, size=size,
-                   chunkdim=chunkdim, level=level)
-  # TODO: appendDatasetCreationToZarrDumpLog? ####
-  # appendDatasetCreationToZarrDumpLog(filepath, name, dim,
-  #                                    type, chunkdim, level)
+                   type=type, size=size, chunkdim=chunkdim, level=level)
 }
+

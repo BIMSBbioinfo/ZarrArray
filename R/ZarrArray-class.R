@@ -108,8 +108,6 @@ as.array.ZarrArray <- function(x) {
   as.array(x@seed)
 }
 
-#' @rdname ZarrArray
-#' @export
 setMethod("as.array", "ZarrArray", as.array.ZarrArray)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
