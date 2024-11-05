@@ -139,9 +139,15 @@ compute_max_string_size <- function(x)
   max(nchar(x, type="bytes", keepNA=FALSE))
 }
 
-ZarrCreateDataset <- function(filepath, zarrarray, name, dim, maxdim=dim,
-                             type="double", H5type=NULL, size=NULL,
-                             chunkdim=dim, level=6L)
+ZarrCreateDataset <- function(filepath, 
+                              zarrarray, 
+                              name, 
+                              dim, 
+                              maxdim=dim,
+                              type="double", 
+                              size=NULL,
+                              chunkdim=dim, 
+                              level=6L)
 {
   stopifnot(is.numeric(dim),
             is.numeric(maxdim), length(maxdim) == length(dim))
@@ -149,8 +155,14 @@ ZarrCreateDataset <- function(filepath, zarrarray, name, dim, maxdim=dim,
     stopifnot(is.numeric(chunkdim), length(chunkdim) == length(dim))
     chunkdim <- pmin(chunkdim, maxdim)
   }
-  zarrarray$create_dataset(name = name, shape = dim, chunks = chunkdim)
-  # if (!ok)
-  #   stop(wmsg("failed to create dataset '", name, "' ",
-  #             "in file '", filepath, "'"), call.=FALSE)
+  
+  if(type == "character"){
+    type <- "|O"
+    object_codec <- pizzarr::VLenUtf8Codec$new()
+  } else{
+    type <- NA
+    object_codec <- NA
+  }
+  
+  zarrarray$create_dataset(name = name, shape = dim, chunks = chunkdim, dtype = type, object_codec = object_codec)
 }

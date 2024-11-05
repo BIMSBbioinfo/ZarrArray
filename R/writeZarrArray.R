@@ -74,9 +74,11 @@ ZarrRealizationSink <- function(dim,
                                 dimnames=NULL, 
                                 type="double",
                                 as.sparse=FALSE,
-                                filepath=NULL, name=NULL,
-                                H5type=NULL, size=NULL,
-                                chunkdim=NULL, level=NULL)
+                                filepath=NULL, 
+                                name=NULL,
+                                size=NULL,
+                                chunkdim=NULL, 
+                                level=NULL)
 {
   if (!isTRUEorFALSE(as.sparse))
     stop(wmsg("'as.sparse' must be TRUE or FALSE"))
@@ -97,18 +99,14 @@ ZarrRealizationSink <- function(dim,
   } else {
     chunkdim <- .normarg_chunkdim(chunkdim, dim)
   }
-  # if (is.null(level)) {
-  #   if (is.null(chunkdim)) {
-  #     level <- 0L
-  #   } else {
-  #     level <- getZarrDumpCompressionLevel()
-  #   }
-  # } else {
-  #   level <- normalize_compression_level(level)
-  # }
-  create_and_log_Zarr_dataset(filepath, name, dim,
-                              type=type, H5type=H5type, size=size,
-                              chunkdim=chunkdim, level=level)
+
+  create_and_log_Zarr_dataset(filepath, 
+                              name, 
+                              dim,
+                              type=type, 
+                              size=size,
+                              chunkdim=chunkdim, 
+                              level=level)
   if (is.null(dimnames)) {
     dimnames <- vector("list", length(dim))
   } else {
@@ -126,25 +124,32 @@ ZarrRealizationSink <- function(dim,
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Writing data to an ZarrRealizationSink object
+### Writing data to an ZarrRealizationSink object 
 ###
 
 setMethod("write_block", "ZarrRealizationSink",
           function(sink, viewport, block)
           {
+            print(sink@type)
             if (!is.array(block))
               block <- as.array(block)
             if(sink@type == "character"){
-              sink_type <- "<U20" 
+              # sink_type <- "<U20" 
+              sink_type <- "|O"
+              object_codec <- pizzarr::VLenUtf8Codec$new()
             } else{
               sink_type <- NA
+              object_codec <- NA
             }
+            
             zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
                                                   path = sink@name, 
                                                   shape = dim(block),
                                                   mode = "a",
-                                                  dtype = sink_type)
+                                                  dtype = sink_type,
+                                                  object_codec = object_codec)
             zarrarray$set_item("...", block)
+            
             sink
           }
 )
@@ -195,9 +200,13 @@ writeZarrArray <- function(x, filepath=NULL, name=NULL,
   ## compute_max_string_size() will trigger block processing if 'x' is a
   ## DelayedArray object of type "character", so it could take a while.
   size <- compute_max_string_size(x)
-  sink <- ZarrRealizationSink(dim(x), sink_dimnames, type(x), as.sparse,
-                              filepath=filepath, name=name,
-                              H5type=H5type, size=size,
+  sink <- ZarrRealizationSink(dim(x), 
+                              sink_dimnames, 
+                              type(x), 
+                              as.sparse,
+                              filepath=filepath, 
+                              name=name,
+                              size=size,
                               chunkdim=chunkdim, level=level)
   sink <- BLOCK_write_to_sink(sink, x, verbose=verbose)
   as(sink, "ZarrArray")
