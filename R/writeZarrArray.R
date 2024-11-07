@@ -130,29 +130,33 @@ ZarrRealizationSink <- function(dim,
 setMethod("write_block", "ZarrRealizationSink",
           function(sink, viewport, block)
           {
-            print(sink@type)
+            # convert to array if needed
             if (!is.array(block))
               block <- as.array(block)
-            if(sink@type == "character"){
-              # sink_type <- "<U20" 
-              sink_type <- "|O"
-              object_codec <- pizzarr::VLenUtf8Codec$new()
-            } else{
-              sink_type <- NA
-              object_codec <- NA
-            }
             
+            # viewport to slice
+            sview <- start(viewport)
+            eview <- end(viewport)
+            ind <- mapply(function(x,y){
+              pizzarr::slice(x,y)
+            }, sview, eview, SIMPLIFY = FALSE)
+            # print(ind)
+            # 
+            # open and set block
             zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
-                                                  path = sink@name, 
-                                                  shape = dim(block),
-                                                  mode = "a",
-                                                  dtype = sink_type,
-                                                  object_codec = object_codec)
-            zarrarray$set_item("...", block)
-            
+                                                  path = sink@name,
+                                                  mode = "a")
+            zarrarray$set_item(ind, block)
             sink
           }
 )
+
+# temp <- function(sink, block){
+#   zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
+#                                         path = sink@name,
+#                                         mode = "a")
+#   zarrarray$set_item("...", block)
+# }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercing an ZarrRealizationSink object
@@ -183,8 +187,11 @@ setAs("ZarrRealizationSink", "DelayedArray",
 ### set to 0.
 ### Return an ZarrArray object pointing to the newly written Zarr dataset
 ### on disk.
-writeZarrArray <- function(x, filepath=NULL, name=NULL,
-                           H5type=NULL, chunkdim=NULL, level=NULL,
+writeZarrArray <- function(x, filepath=NULL, 
+                           name=NULL,
+                           H5type=NULL, 
+                           chunkdim=NULL, 
+                           level=NULL,
                            as.sparse=NA,
                            with.dimnames=TRUE, verbose=NA)
 {
