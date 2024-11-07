@@ -90,7 +90,6 @@ setReplaceMethod("zattrs", "list",
   # temporarily supporting pointers,
   # for the purpose of development...
   slots=c(seed="Array_OR_array_OR_df", zattrs="Zattrs")
-  # slots=c(data="Array_OR_array_OR_df", zattrs="Zattrs")
 )
 
 #' @rdname ZarrArray
@@ -134,7 +133,6 @@ ZarrArray <- function(data, name, as.sparse=FALSE, type=NA)
   } else {
     seed <- ZarrArraySeed(filepath = data, name, as.sparse=as.sparse, type=type)
   }
-  # .ZarrArray(data = DelayedArray(seed))
   .ZarrArray(seed = DelayedArray(seed))
 }
 

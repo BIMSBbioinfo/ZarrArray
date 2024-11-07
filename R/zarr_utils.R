@@ -163,6 +163,9 @@ ZarrCreateDataset <- function(filepath,
     type <- NA
     object_codec <- NA
   }
-  
-  zarrarray$create_dataset(name = name, shape = dim, chunks = chunkdim, dtype = type, object_codec = object_codec)
+  zarrarray$create_dataset(name = name, 
+                           shape = dim, 
+                           chunks = chunkdim, 
+                           dtype = type, 
+                           object_codec = object_codec)
 }
