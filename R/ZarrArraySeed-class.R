@@ -224,7 +224,7 @@ setMethod("dimnames", "ZarrArraySeed",
   # open zarr
   zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
   zarrmat <- zarr.array$get_item(x@name)
-  
+
   # create slices
   ind <- mapply(function(x,y){
     if(is.null(x)){
@@ -234,7 +234,7 @@ setMethod("dimnames", "ZarrArraySeed",
     } else if(length(x) == 1){
       return(pizzarr::slice(x,x))
     } else if(length(x) > 1){
-      return(x)
+      return(pizzarr::int(x))
     }
   }, index, zarrmat$get_shape(), SIMPLIFY = FALSE)
   
@@ -310,16 +310,16 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
 ### as.array()
 ###
 
-as.array.ZarrArraySeed <- function(x) {
-  
-  # open zarr
-  zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
-  zarrmat <- zarr.array$get_item(x@name)
-  
-  # return
-  as.array(zarrmat$get_item("...")$data)
-}
+# as.array.ZarrArraySeed <- function(x) {
+# 
+#   # open zarr
+#   zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
+#   zarrmat <- zarr.array$get_item(x@name)
+# 
+#   # return
+#   as.array(zarrmat$get_item("...")$data)
+# }
 
-#' @rdname ZarrArraySeed
-#' @export
-setMethod("as.array", "ZarrArraySeed", as.array.ZarrArraySeed)
+#' #' @rdname ZarrArraySeed
+#' #' @export
+#' setMethod("as.array", "ZarrArraySeed", as.array.ZarrArraySeed)
