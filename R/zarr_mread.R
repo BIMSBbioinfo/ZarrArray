@@ -84,7 +84,8 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
   #   pizzarr::slice(x,x+y)
   # }, starts, counts)
   # ans <- zarrmat$get_item(ind)$data
-  ans <- zarrmat$get_item(list(pizzarr::slice(1,1),pizzarr::slice(1,1)))$data
+  ind <- lapply(1:length(starts), function(x) pizzarr::slice(1,1))
+  ans <- zarrmat$get_item(ind)$data
   
   if (is.null(starts) || !order_starts)
     return(ans)
