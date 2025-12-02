@@ -77,15 +77,11 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
   }
 
   # read zarr
-  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
-  zarrmat <- zarr.array$get_item(name)
-  # if(is.null())
-  # ind <- mapply(function(x,y){
-  #   pizzarr::slice(x,x+y)
-  # }, starts, counts)
+  # zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
+  # zarrmat <- zarr.array$get_item(name)
+  # ind <- lapply(1:length(starts), function(x) pizzarr::slice(1,1))
   # ans <- zarrmat$get_item(ind)$data
-  ind <- lapply(1:length(starts), function(x) pizzarr::slice(1,1))
-  ans <- zarrmat$get_item(ind)$data
+  ans <- read_zarr_array(file.path(filepath, name), index = starts)
   
   if (is.null(starts) || !order_starts)
     return(ans)

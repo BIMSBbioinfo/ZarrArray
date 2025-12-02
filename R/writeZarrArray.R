@@ -112,7 +112,7 @@ ZarrRealizationSink <- function(dim,
   } else {
     zarrwriteDimnames(dimnames, filepath, name)
   }
-  new2("ZarrRealizationSink", 
+  new("ZarrRealizationSink", 
        dim=dim, 
        dimnames=dimnames, 
        type=type,
@@ -130,33 +130,36 @@ ZarrRealizationSink <- function(dim,
 setMethod("write_block", "ZarrRealizationSink",
           function(sink, viewport, block)
           {
-            # convert to array if needed
-            if (!is.array(block))
-              block <- as.array(block)
-            
-            # viewport to slice
-            sview <- start(viewport)
-            eview <- end(viewport)
-            ind <- mapply(function(x,y){
-              pizzarr::slice(x,y)
-            }, sview, eview, SIMPLIFY = FALSE)
-            # print(ind)
             # 
-            # open and set block
-            zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
-                                                  path = sink@name,
-                                                  mode = "a")
-            zarrarray$set_item(ind, block)
+            # # convert to array if needed
+            # if (!is.array(block))
+            #   block <- as.array(block)
+            # 
+            # # viewport to slice
+            # sview <- start(viewport)
+            # eview <- end(viewport)
+            # ind <- mapply(function(x,y){
+            #   pizzarr::slice(x,y)
+            # }, sview, eview, SIMPLIFY = FALSE)
+            # # print(ind)
+            # # 
+            # # open and set block
+            # zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
+            #                                       path = sink@name,
+            #                                       mode = "a")
+            # zarrarray$set_item(ind, block)
+            # sink
+            starts <- start(viewport) - 1L
+            index <- lapply(width(viewport), seq_len)
+            # nolint next: undesirable_function_linter.
+            index <- mapply(FUN = "+", starts, index, SIMPLIFY = FALSE)
+            
+            update_zarr_array(file.path(sink@filepath, sink@name),
+                              x = block,
+                              index = index)
             sink
           }
 )
-
-# temp <- function(sink, block){
-#   zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
-#                                         path = sink@name,
-#                                         mode = "a")
-#   zarrarray$set_item("...", block)
-# }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercing an ZarrRealizationSink object
@@ -207,16 +210,21 @@ writeZarrArray <- function(x, filepath=NULL,
   ## compute_max_string_size() will trigger block processing if 'x' is a
   ## DelayedArray object of type "character", so it could take a while.
   size <- compute_max_string_size(x)
-  sink <- ZarrRealizationSink(dim(x), 
+  sink <- ZarrArray::ZarrRealizationSink(dim(x), 
                               sink_dimnames, 
                               type(x), 
                               as.sparse,
                               filepath=filepath, 
                               name=name,
                               size=size,
-                              chunkdim=chunkdim, level=level)
+                              chunkdim=chunkdim, 
+                              level=level)
   sink <- BLOCK_write_to_sink(sink, x, verbose=verbose)
-  as(sink, "ZarrArray")
+  # as(sink, "ZarrArray")
+  DelayedArray(seed = 
+    ZarrArraySeed(sink@filepath, sink@name,
+                  as.sparse=sink@as_sparse)
+  )
 }
 
 

@@ -218,29 +218,8 @@ setMethod("dimnames", "ZarrArraySeed",
 
 .extract_array_from_ZarrArraySeed <- function(x, index)
 {
-  # check indices
-  as_int <- !is.na(x@type) && x@type == "integer"
-  
-  # open zarr
-  zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
-  zarrmat <- zarr.array$get_item(x@name)
-
-  # create slices
-  ind <- mapply(function(x,y){
-    if(is.null(x)){
-      return(pizzarr::slice(1,y))
-    } else if(length(x) == 0){
-      return(pizzarr::slice(0,0))
-    } else if(length(x) == 1){
-      return(pizzarr::slice(x,x))
-    } else if(length(x) > 1){
-      return(pizzarr::int(x))
-    }
-  }, index, zarrmat$get_shape(), SIMPLIFY = FALSE)
-  
-  # get zarr values given slices or indices
-  ans <- zarrmat$get_orthogonal_selection(ind)$data
-  ans
+  res <- read_zarr_array(zarr_array_path = file.path(x@filepath, x@name), index = index)
+  return(res)
 }
 
 # check if indices are sequential
@@ -272,7 +251,6 @@ setMethod("chunkdim", "ZarrArraySeed", function(x) x@chunkdim)
 ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
 {
   name <- normarg_zarr_name(name)
-  
   ## Check 'as.sparse'.
   if (!isTRUEorFALSE(as.sparse))
     stop(wmsg("'as.sparse' must be TRUE or FALSE"))
@@ -289,15 +267,14 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
                 "(e.g. \"integer\") or \"list\""))
   }
   
-  # get zarr
-  zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
-  
-  # get attributes
-  dim <- zarr.array$get_item(name)$get_shape()
-  chunkdim <- zarrchunkdim(filepath, name, adjust=TRUE)
+  # get zarr attributes
+  overview <- zarr_overview(file.path(filepath, name), 
+                                  as_data_frame = TRUE)
+  dim <- overview$dim[[1]]
+  chunkdim <- overview$chunk_dim[[1]]
   first_val <- .read_zarrdataset_first_val(filepath, name, dim)
   
-  new2("ZarrArraySeed", 
+  new("ZarrArraySeed", 
        filepath=filepath,
        name=name,
        as_sparse=as.sparse,
@@ -306,21 +283,3 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
        chunkdim=chunkdim,
        first_val = first_val)
 }
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### as.array()
-###
-
-# as.array.ZarrArraySeed <- function(x) {
-# 
-#   # open zarr
-#   zarr.array <- pizzarr::zarr_open(store = x@filepath, mode = "r")
-#   zarrmat <- zarr.array$get_item(x@name)
-# 
-#   # return
-#   as.array(zarrmat$get_item("...")$data)
-# }
-
-#' #' @rdname ZarrArraySeed
-#' #' @export
-#' setMethod("as.array", "ZarrArraySeed", as.array.ZarrArraySeed)

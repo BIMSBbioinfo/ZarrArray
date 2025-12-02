@@ -7,10 +7,8 @@ Date: 2024-08-23
 License: MIT
 Author: Artur Manukyan
 Maintainer: Artur Manukyan <artur-man@hotmail.com>
-Depends: R (>= 3.4), methods, SparseArray, DelayedArray
+Depends: R (>= 3.4), methods, SparseArray, DelayedArray, Rarr
 Imports: utils, stats, tools, Matrix, BiocGenerics (>= 0.31.5), 
-         S4Vectors, IRanges, S4Arrays (>= 1.1.1), pizzarr
-Remotes:
-  Artur-man/pizzarr
+         S4Vectors, IRanges, S4Arrays (>= 1.1.1)
 SystemRequirements: GNU make
 RoxygenNote: 7.3.2

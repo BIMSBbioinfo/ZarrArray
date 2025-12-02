@@ -4,7 +4,6 @@ importFrom(stats, setNames)
 importFrom(tools, file_path_as_absolute)
 importFrom(Matrix, sparseMatrix)
 
-import(pizzarr)
 import(BiocGenerics)
 import(S4Vectors)
 import(IRanges)
@@ -29,6 +28,7 @@ exportClasses(
 ###
 
 export(
+    create_zarr, create_zarr_group,
     get_zarrmread_returned_type, zarr_mread,
     set_zarrdimnames, get_zarrdimnames, zarrwriteDimnames, zarrreadDimnames,
     ZarrArraySeed,
@@ -48,3 +48,7 @@ export(
     ZarrRealizationSink, writeZarrArray
 )
 
+importFrom(Rarr, zarr_overview)
+importFrom(Rarr, read_zarr_array)
+importFrom(Rarr, write_zarr_array)
+importFrom(Rarr, create_empty_zarr_array)

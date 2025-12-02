@@ -11,27 +11,15 @@
 
 zarrisdimscale <- function(filepath, name)
 {
-  # .Call2("C_zarrisdimscale", filepath, name, PACKAGE="HDF5Array")
-  
-  # open zarr and check
-  file.status <- try(zarr <- pizzarr::zarr_open(store = filepath, mode = "r"))
-  if(inherits(file.status, "try-error")){
-    file.remove(filepath)
-    return(FALSE)
-  }
-
   # check group 
-  if(zarr$contains_item(name)){    
+  if(zarrexists(filepath = filepath, name = name)){    
     
     # get dimnames
-    zarr_group <- zarr$get_item(name)
-    if(inherits(zarr_group, "ZarrGroup")){
+    if(zarrisgroup(filepath = filepath, name = name)){
       
       # check ZarrArray names
-      zarr_group <- zarr_open_group(paste0(filepath, "/", name), mode = "r")
-      zarr_group_mem <- zarr_group$get_store()$listdir()
+      zarr_group_mem <- list.dirs(file.path(filepath, name), full.names = FALSE, recursive = FALSE)
       zarr_group_mem <- zarr_group_mem[!grepl("^\\.", zarr_group_mem)]
-      zarr_group_mem <- zarr_group_mem[sapply(zarr_group_mem, function(z) inherits(zarr_group$get_item(z), "ZarrArray"))]
       if(length(zarr_group_mem) > 0){
         zarr_group_mem <- na.omit(as.numeric(zarr_group_mem))
 
@@ -39,9 +27,11 @@ zarrisdimscale <- function(filepath, name)
         zarrdimnames <- c()
         if(length(zarr_group_mem) > 0 && all(is_integer(zarr_group_mem))){
           for(i in 1:length(zarr_group_mem)){
-            zarr_array <- pizzarr::zarr_open_array(paste0(filepath, "/", name, "/", zarr_group_mem[i]))
+            zarr_array <- read_zarr_array(file.path(filepath, name,zarr_group_mem[i]))
+            overview <- zarr_overview(paste0(filepath, "/", name, "/", zarr_group_mem[i]), 
+                                             as_data_frame = TRUE)
             zarrdimnames <- c(zarrdimnames, 
-                              zarr_array$get_ndim())
+                              length(overview$dim[[1]]))
           }
           return(all(zarrdimnames == 1))
         } else {
@@ -86,14 +76,18 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
                     name = scale_path)){
     
     # open zarr
-    zarr <- pizzarr::zarr_open(store = filepath, mode = "r")
-    zarr_array_ndim <- zarr$get_item(name)$get_ndim()
+    # zarr <- pizzarr::zarr_open(store = filepath, mode = "r")
+    # zarr_array_ndim <- zarr$get_item(name)$get_ndim()
+    zarr_array <- read_zarr_array(file.path(filepath, name))
+    overview <- zarr_overview(file.path(filepath, name), 
+                                    as_data_frame = TRUE)
+    zarr_array_ndim <- length(overview$dim[[1]])
     
     # get dimnames
-    zarr_group <- zarr_open_group(paste0(filepath, scale_path))
-    zarr_group_mem <- zarr_group$get_store()$listdir()
+    # zarr_group <- zarr_open_group(paste0(filepath, scale_path))
+    # zarr_group_mem <- zarr_group$get_store()$listdir()
+    zarr_group_mem <- list.dirs(file.path(filepath, scale_path), full.names = FALSE, recursive = FALSE)
     zarr_group_mem <- zarr_group_mem[!grepl("^\\.", zarr_group_mem)]
-    zarr_group_mem <- zarr_group_mem[sapply(zarr_group_mem, function(z) inherits(zarr_group$get_item(z), "ZarrArray"))]
     if(length(zarr_group_mem) > 0){
       zarr_group_mem <- na.omit(as.numeric(zarr_group_mem))
       zarr_group_mem <- zarr_group_mem[zarr_group_mem < (zarr_array_ndim + 1)]
@@ -102,9 +96,11 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
       zarrdimnames <- list()
       if(length(zarr_group_mem) > 0){
         for(i in 1:length(zarr_group_mem)){
-          zarr_array <- pizzarr::zarr_open_array(paste0(filepath, scale_path, "/", zarr_group_mem[i]))
-          zarrdimnames[[as.character(zarr_group_mem[i])]] <- 
-            zarr_array$get_item("...")$data
+          # zarr_array <- pizzarr::zarr_open_array(paste0(filepath, scale_path, "/", zarr_group_mem[i]))
+          # zarrdimnames[[as.character(zarr_group_mem[i])]] <- 
+          #   zarr_array$get_item("...")$data
+          zarr_array <- read_zarr_array(file.path(filepath, scale_path, zarr_group_mem[i]))
+          zarrdimnames[[as.character(zarr_group_mem[i])]] <- zarr_array
         }
         return(zarrdimnames)
         # no scales are saved as integers (index of dimensions, e.g. 1,2,3)    
@@ -118,53 +114,6 @@ zarrgetdimscales <- function(filepath, name, scalename=NA)
   } else {
     return(NA)
   }
-  
-  # # open zarr
-  # zarr <- pizzarr::zarr_open(store = filepath, mode = "r")
-  # zarr_store <- zarr$get_store()
-  # zarr_array_ndim <- zarr$get_item(name)$get_ndim()
-  # 
-  # # check group 
-  # if(zarr$contains_item(paste0(name, "_", scalename))){    
-  #   
-  #   # get dimnames
-  #   # zarr_group <- zarr$get_item(paste0(name, "_", scalename))  
-  #   zarr_group <- zarr_open_group(paste0(filepath, "/", name, "_", scalename))
-  #   if(inherits(zarr_group, "ZarrGroup")){
-  #     
-  #     # check ZarrArray names
-  #     zarr_group_mem <- zarr_group$get_store()$listdir()
-  #     zarr_group_mem <- zarr_group_mem[!grepl("^\\.", zarr_group_mem)]
-  #     zarr_group_mem <- zarr_group_mem[sapply(zarr_group_mem, function(z) inherits(zarr_group$get_item(z), "ZarrArray"))]
-  #     if(length(zarr_group_mem) > 0){
-  #       zarr_group_mem <- na.omit(as.numeric(zarr_group_mem))
-  #       zarr_group_mem <- zarr_group_mem[zarr_group_mem < (zarr_array_ndim + 1)]
-  #       
-  #       # read dim names
-  #       zarrdimnames <- list()
-  #       if(length(zarr_group_mem) > 0){
-  #         for(i in 1:length(zarr_group_mem)){
-  #           zarr_array <- pizzarr::zarr_open_array(paste0(filepath, "/", name, "_", scalename, "/", zarr_group_mem[i]))
-  #           zarrdimnames[[as.character(zarr_group_mem[i])]] <- 
-  #             zarr_array$get_item("...")$data
-  #         }
-  #         return(zarrdimnames)
-  #       # no scales are saved as integers (index of dimensions, e.g. 1,2,3)    
-  #       } else {
-  #         return(NULL)
-  #       }
-  #     # there are no datasets under group  
-  #     } else {
-  #       return(NULL)
-  #     }
-  #   # scales are not stored in a group 
-  #   } else {
-  #     return(NULL)
-  #   }
-  # # if group doesn't exist, return NULL
-  # } else{
-  #   return(NULL)
-  # }
 }
 
 ### name:      The name of the dataset on which to set Dimension Scales.

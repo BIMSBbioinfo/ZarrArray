@@ -198,16 +198,19 @@ zarrwriteDimnames <- function(dimnames, filepath, name, group=NA, zarrdimnames=N
 
     ## Create group if needed.
     if (!is.na(group) && !zarrexists(filepath, group))
-      pizzarr::zarr_open_group(store = filepath, path = group, mode = "a")
+      create_zarr_group(filepath, group)
+      # pizzarr::zarr_open_group(store = filepath, path = group, mode = "a")
         
     ## Write dimnames.
     for (along in which(not_NULL)) {
         dn <- dimnames[[along]]
+        dn <- array(dn)
         zarrdn <- zarrdimnames[[along]]
-        zarrdimname <- pizzarr::zarr_open_array(store = filepath, path = zarrdn, 
-                                                mode = "a", shape = length(dn), 
-                                                dtype = "<U20")
-        zarrdimname$set_item("...", array(dn))
+        # zarrdimname <- pizzarr::zarr_open_array(store = filepath, path = zarrdn, 
+        #                                         mode = "a", shape = length(dn), 
+        #                                         dtype = "<U20")
+        # zarrdimname$set_item("...", array(dn))
+        write_zarr_array(dn, file.path(filepath, zarrdn), data_type = "character", chunk_dim = dim(dn))
     }
 }
 

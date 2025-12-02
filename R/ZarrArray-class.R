@@ -100,16 +100,6 @@ setMethod("metadata", "ZarrArray", function(x) {
 })
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### as.array()
-###
-
-# as.array.ZarrArray <- function(x) {
-#   as.array(x@seed)
-# }
-# 
-# setMethod("as.array", "ZarrArray", as.array.ZarrArray)
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
 
@@ -140,7 +130,6 @@ setReplaceMethod("is_sparse", "ZarrArray",
                  function(x, value)
                  {
                    is_sparse(x@seed) <- value
-                   # is_sparse(x@data) <- value
                    x
                  }
 )
