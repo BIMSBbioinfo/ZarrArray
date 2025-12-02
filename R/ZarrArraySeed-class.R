@@ -146,7 +146,7 @@ setReplaceMethod("path", "ZarrArraySeed",
                                                          what1="the supplied path",
                                                          what2="the Zarr dataset")
                    ## Check dim compatibility.
-                   new_dim <- zarr5dim(new_filepath, object@name)
+                   new_dim <- zarrdim(new_filepath, object@name)
                    object_dim <- object@dim
                    if (!identical(new_dim, object_dim)) {
                      new_dim_in1string <- paste0(new_dim, collapse=" x ")
@@ -295,7 +295,8 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
   # get attributes
   dim <- zarr.array$get_item(name)$get_shape()
   chunkdim <- zarrchunkdim(filepath, name, adjust=TRUE)
-
+  first_val <- .read_zarrdataset_first_val(filepath, name, dim)
+  
   new2("ZarrArraySeed", 
        filepath=filepath,
        name=name,
@@ -303,7 +304,7 @@ ZarrArraySeed <- function(filepath, name, as.sparse=FALSE, type=NA)
        type=type,
        dim=dim,
        chunkdim=chunkdim,
-       first_val = NULL)
+       first_val = first_val)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
