@@ -130,30 +130,10 @@ ZarrRealizationSink <- function(dim,
 setMethod("write_block", "ZarrRealizationSink",
           function(sink, viewport, block)
           {
-            # 
-            # # convert to array if needed
-            # if (!is.array(block))
-            #   block <- as.array(block)
-            # 
-            # # viewport to slice
-            # sview <- start(viewport)
-            # eview <- end(viewport)
-            # ind <- mapply(function(x,y){
-            #   pizzarr::slice(x,y)
-            # }, sview, eview, SIMPLIFY = FALSE)
-            # # print(ind)
-            # # 
-            # # open and set block
-            # zarrarray <- pizzarr::zarr_open_array(store = sink@filepath, 
-            #                                       path = sink@name,
-            #                                       mode = "a")
-            # zarrarray$set_item(ind, block)
-            # sink
             starts <- start(viewport) - 1L
             index <- lapply(width(viewport), seq_len)
             # nolint next: undesirable_function_linter.
             index <- mapply(FUN = "+", starts, index, SIMPLIFY = FALSE)
-            
             update_zarr_array(file.path(sink@filepath, sink@name),
                               x = block,
                               index = index)

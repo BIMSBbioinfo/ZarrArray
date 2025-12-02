@@ -77,12 +77,17 @@ zarr_mread <- function(filepath, name, starts=NULL, counts=NULL, noreduce=FALSE,
   }
 
   # read zarr
-  # zarr.array <- pizzarr::zarr_open(store = filepath, mode = "r")
-  # zarrmat <- zarr.array$get_item(name)
-  # ind <- lapply(1:length(starts), function(x) pizzarr::slice(1,1))
-  # ans <- zarrmat$get_item(ind)$data
-  ans <- read_zarr_array(file.path(filepath, name), index = starts)
+  if(is.null(starts)){
+    # TODO: is this necessary
+    ndim <- length(zarrdim(filepath, name))
+    index <- vector("list", ndim)
+  } else {
+    index <- starts
+  }
+  ans <- read_zarr_array(file.path(filepath, name), index = index)
   
+  if (as.sparse)
+    ans <- COO_SparseArray(ans[[1L]], ans[[2L]], ans[[3L]], check=FALSE)
   if (is.null(starts) || !order_starts)
     return(ans)
   index <- lapply(seq_along(starts0),

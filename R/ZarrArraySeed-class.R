@@ -6,13 +6,7 @@
 .ZarrArraySeed <- setClass("ZarrArraySeed",
          contains="Array",
          representation(
-           ## ----------------- user supplied slots -----------------
-           
-           ## **absolute** path to a local Zarr directory so the
-           ## object won't break when the user changes the working directory
-           ## (e.g. with setwd()). The path must also be in its canonical
-           ## form so comparing paths from different objects is meaningful
-           ## (required by quickResaveHDF5SummarizedExperiment()).
+           ## filepath
            filepath="character",
            
            ## Name of dataset in the Zarr directory.
@@ -216,6 +210,15 @@ setMethod("dimnames", "ZarrArraySeed",
 ### extract_array()
 ###
 
+.zarrmread2 <- function(filepath, name, index=NULL,
+                       as.integer=FALSE, as.sparse=FALSE)
+{
+  if (!is.null(index))
+    index <- S4Arrays:::expand_Nindex_RangeNSBS(index)
+  zarrmread(filepath, name, starts=index,
+          as.vector=FALSE, as.integer=as.integer, as.sparse=as.sparse)
+}
+
 .extract_array_from_ZarrArraySeed <- function(x, index)
 {
   res <- read_zarr_array(zarr_array_path = file.path(x@filepath, x@name), index = index)
@@ -236,6 +239,56 @@ is.sequential <- function(index){
 }
 
 setMethod("extract_array", "ZarrArraySeed", .extract_array_from_ZarrArraySeed)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_sparse() and extract_sparse_array() methods
+###
+
+setMethod("is_sparse", "ZarrArraySeed",
+          function(x) .hasSlot(x, "as_sparse") && x@as_sparse
+)
+
+setReplaceMethod("is_sparse", "ZarrArraySeed",
+                 function(x, value)
+                 {
+                   if (!isTRUEorFALSE(value))
+                     stop(wmsg("the supplied value must be TRUE or FALSE"))
+                   if (!.hasSlot(x, "as_sparse"))
+                     x <- updateObject(x, check=FALSE)
+                   x@as_sparse <- value
+                   x
+                 }
+)
+
+### Returns a COO_SparseArray object.
+### TODO: Modify zarr_mread() so that it natively constructs and returns
+### an SVT_SparseArray object when 'as.sparse=TRUE'.
+.extract_sparse_array_from_ZarrArraySeed <- function(x, index)
+{
+  if (!is_sparse(x))
+    stop(wmsg("calling extract_sparse_array() on an ZarrArraySeed ",
+              "object is supported only if the object is sparse"))
+  if (!.hasSlot(x, "type"))
+    return(.zarrmread2(x@filepath, x@name, index, as.sparse=TRUE))
+  ## If the user requested a specific type when ZarrArraySeed object 'x'
+  ## was constructed then we must return a COO_SparseArray object of
+  ## that type.
+  as_int <- !is.na(x@type) && x@type == "integer"
+  ## .zarrmread2(..., as.sparse=TRUE) returns a COO_SparseArray object.
+  ans <- .zarrmread2(x@filepath, x@name, index, as.integer=as_int,
+                     as.sparse=TRUE)
+  if (!is.na(x@type) && type(ans) != x@type)
+    type(ans) <- x@type
+  ans
+}
+
+setMethod("extract_sparse_array", "ZarrArraySeed",
+          function(x, index)
+          {
+            coo <- .extract_sparse_array_from_ZarrArraySeed(x, index)
+            as(coo, "SVT_SparseArray")
+          }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### chunkdim() getter
